@@ -9,6 +9,7 @@ require 'bundler'
 require 'logger'
 
 Bundler.setup
+Bundler.require
 
 require 'sinatra'
 
