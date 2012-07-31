@@ -1,8 +1,4 @@
-require 'sinatra'
-require 'logger'
-require 'sinatra/activerecord'
-require_relative 'db/models'
-require "bundler/setup"
+require File.dirname(__FILE__) + '/environment.rb'
 
 set :raise_errors, false
 set :show_exceptions, false

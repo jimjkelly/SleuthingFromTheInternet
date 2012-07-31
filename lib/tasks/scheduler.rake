@@ -1,7 +1,3 @@
-require 'sinatra/activerecord/rake'
-require 'active_record'
-require_relative '../../db/models'
-require './app.rb'
 require 'open-uri'
 require 'json'
 
@@ -9,7 +5,7 @@ require 'json'
 ENV['RACK_ENV'] = 'PLACEHOLDER' if not ENV.key?('RACK_ENV')
 
 task :environment do
-    require File.expand_path(File.join(*%w[ config environment ]), File.dirname('..'))
+    require File.dirname(__FILE__) + '/../../environment.rb'
 end
 
 
