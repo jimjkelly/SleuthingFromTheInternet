@@ -15,7 +15,7 @@ events.
 Data Sources
 ============
 
-Currently data is being culled from the USGS GEOJSON feed on an hourly basis
+Currently data is being culled from the USGS GEOJSON feed every ten minutes
 (details can be found in the scraper at lib/tasks/scheduler.rake).
 
 Bugs and Feature Requests
