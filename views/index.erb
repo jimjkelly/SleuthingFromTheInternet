@@ -1,8 +1,8 @@
-          <div class="span12 offset1">
+          <div class="span10 offset1">
                 <p>Sleuthing from the Internet seeks to make the job of monitoring USGS data to detect things that go boom much easier.  Below is a list of the five most recent events (view <a href="<%= url('/events') %>">all</a>):</p>
                 <% if @events %>
                         <% @events.each do |event| %>
-                                ID: <%= link('http://earthquake.usgs.gov' + event.url, event.event_id) %> MAG: <%= event.mag %> DEPTH: <%= event.depth %><br>
+                                ID: <%= link(url('/event/' + event.event_id), event.event_id) %> MAG: <%= event.mag %> DEPTH: <%= event.depth %> (<%= link('http://earthquake.usgs.gov' + event.url, 'USGS Info Page') %>)<br>
                         <% end %>
                 <% end %>
           </div>

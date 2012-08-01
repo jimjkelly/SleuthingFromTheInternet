@@ -53,10 +53,21 @@ end
 
 get '/events.?:format?' do
   @events = Events.all
-  if params[:format] == 'json'
+  if params[:format] and params[:format].downcase == 'json'
     content_type :json
     @events.to_json
   else    
     erb :events
+  end
+end
+
+#get '/event/:id.?:format?' do
+get %r{/event\/([^\/?#\.]+)(?:\.|%2E)?([^\/?#]+)?} do
+  @event = Events.where("event_id = ?", params[:captures].first).first
+  if params[:captures].second and params[:captures].second.downcase == 'json'
+    content_type :json
+    @event.to_json
+  else
+    erb :event
   end
 end

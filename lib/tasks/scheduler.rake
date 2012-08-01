@@ -69,7 +69,8 @@ task :update_events => :environment do
                           :types => usgsEvent['properties']['types'],
                           :longitude => usgsEvent['geometry']['coordinates'][0],
                           :latitude => usgsEvent['geometry']['coordinates'][1],
-                          :depth => usgsEvent['geometry']['coordinates'][2])
+                          :depth => usgsEvent['geometry']['coordinates'][2],
+                          :retrieved => Time.now.to_formatted_s(:rfc822))
         end
     end
     puts "done."
