@@ -63,7 +63,7 @@ end
 
 #get '/event/:id.?:format?' do
 get %r{/event\/([^\/?#\.]+)(?:\.|%2E)?([^\/?#]+)?} do
-  @event = Events.where("event_id = ?", params[:captures].first).first
+  @event = Events.where("id = ?", params[:captures].first).first
   if params[:captures].second and params[:captures].second.downcase == 'json'
     content_type :json
     @event.to_json

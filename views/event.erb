@@ -1,5 +1,5 @@
           <div class="span10 offset1">
-            <p>Below is the information we have on <%= @event.event_id %> (<%= link(url('/event/' + @event.event_id + '.json'), 'JSON') %>):</p>
+            <p>Below is the information we have on <%= @event.id.to_s %> (<%= link(url('/event/' + @event.id.to_s + '.json'), 'JSON') %>):</p>
             <dl class="dl-horizontal text-overflow">
                 <% @event.attributes.each do |attribute| %>
                     <div class="row">

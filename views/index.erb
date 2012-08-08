@@ -2,7 +2,7 @@
                 <p>Sleuthing from the Internet seeks to make the job of monitoring USGS data to detect things that go boom much easier.  Below is a list of the five most recent events (view <a href="<%= url('/events') %>">all</a>):</p>
                 <% if @events %>
                         <% @events.each do |event| %>
-                                ID: <%= link(url('/event/' + event.event_id), event.event_id) %> MAG: <%= event.mag %> DEPTH: <%= event.depth %> (<%= link('http://earthquake.usgs.gov' + event.url, 'USGS Info Page') %>)<br>
+                                <%= erb :'partials/single_event', :locals => { :event => event } %>
                         <% end %>
                 <% end %>
           </div>
