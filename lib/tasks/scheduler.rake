@@ -83,11 +83,11 @@ task :update_isc => :environment do
         longitude = row.children[6].text
         depth = row.children[8].text
         mag = row.children[10].text
-        url = row.at_xpath('//td/span[@dir="ltr"]/a')['href']
+        url = row.at_xpath('.//td/span[@dir="ltr"]/a')['href']
         unless url.starts_with?('/')
             url = '/' + url
         end
-    
+        
         AddEvent(time, latitude, longitude, depth, mag, url, 'irsc.ut.ac.ir')
     }
   
@@ -108,7 +108,7 @@ task :update_fnet => :environment do
         longitude = row.children[2].text
         depth = row.children[3].text
         mag = row.children[4].text
-        url = row.at_xpath('//tr[@class="joho_bg3"]/td/a')['href']
+        url = row.at_xpath('.//a')['href']
         if url.starts_with?('.')
             url = '/event' + url[1..-1]
         end
