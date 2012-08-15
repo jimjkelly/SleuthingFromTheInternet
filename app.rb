@@ -47,7 +47,7 @@ helpers do
 end
 
 get '/' do
-  @events = Events.find(:all, :order => "id desc", :limit => 5).reverse
+  #@events = Events.find(:all, :order => "id desc", :limit => 5).reverse
   erb :index
 end
 
@@ -64,6 +64,7 @@ end
 #get '/event/:id.?:format?' do
 get %r{/event\/([^\/?#\.]+)(?:\.|%2E)?([^\/?#]+)?} do
   @event = Events.where("id = ?", params[:captures].first).first
+  puts @event.time
   if params[:captures].second and params[:captures].second.downcase == 'json'
     content_type :json
     @event.to_json

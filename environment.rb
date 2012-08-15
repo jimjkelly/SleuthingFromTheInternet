@@ -13,6 +13,10 @@ Bundler.require
 
 require 'sinatra'
 
+Time.zone = "UTC"
+ActiveRecord::Base.time_zone_aware_attributes = true
+ActiveRecord::Base.default_timezone = "UTC"
+
 configure :development do
   ActiveRecord::Base.establish_connection(:adapter => "sqlite3",
                                           :database  => "db/development.db")

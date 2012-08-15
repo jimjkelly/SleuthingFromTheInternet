@@ -1,8 +1,4 @@
-          <div class="span10 offset1">
+          <div class="span12 offset1">
                 <p>Sleuthing from the Internet seeks to make the job of monitoring USGS data to detect things that go boom much easier.  Below is a list of the five most recent events (view <a href="<%= url('/events') %>">all</a>):</p>
-                <% if @events %>
-                        <% @events.each do |event| %>
-                                <%= erb :'partials/single_event', :locals => { :event => event } %>
-                        <% end %>
-                <% end %>
+                <%= erb :'partials/map_interface' %>
           </div>

@@ -1,5 +1,6 @@
 source :rubygems
 gem 'sinatra'
+gem 'rake'
 gem 'json'
 gem 'thin'
 gem "sinatra-activerecord"

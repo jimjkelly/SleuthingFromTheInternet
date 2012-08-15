@@ -58,7 +58,7 @@ task :update_usgs => :environment do
   usgsEvents = JSON.parse(open("http://earthquake.usgs.gov/earthquakes/feed/geojson/all/hour").read)
 
   usgsEvents['features'].each do |usgsEvent|
-    AddEvent(usgsEvent['properties']['time'],
+    AddEvent(Time.at(usgsEvent['properties']['time']),
              usgsEvent['geometry']['coordinates'][1],
              usgsEvent['geometry']['coordinates'][0],
              usgsEvent['geometry']['coordinates'][2],
@@ -78,7 +78,7 @@ task :update_isc => :environment do
     end
       
     iscPage.xpath('//tr[starts-with(@class, "DataRow")]').each { |row|
-        time = Time.parse(row.children[2].text).to_i
+        time = Time.parse(row.children[2].text).utc
         latitude = row.children[4].text
         longitude = row.children[6].text
         depth = row.children[8].text
@@ -103,7 +103,7 @@ task :update_fnet => :environment do
     end
     
     fnetPage.xpath('//tr[@class="joho_bg3"]').each { |row|
-        time = Time.parse(row.children[0].text).to_i
+        time = Time.parse(row.children[0].text)
         latitude = row.children[1].text
         longitude = row.children[2].text
         depth = row.children[3].text
@@ -119,8 +119,9 @@ task :update_fnet => :environment do
     puts " done."
 end
 
-# Time should be UTC, seconds since epoch
+# Time should be a Time utc object
 def AddEvent(time, latitude, longitude, depth, mag, url, source)
+    puts time
     unless Events.exists?(:url => url) # URLs should be unique
         Events.create(:mag => mag,
                       :time => time,
@@ -129,6 +130,6 @@ def AddEvent(time, latitude, longitude, depth, mag, url, source)
                       :latitude => latitude,
                       :depth => depth,
                       :source => source,
-                      :retrieved => Time.now.to_i)
+                      :retrieved => Time.now.utc)
     end 
 end

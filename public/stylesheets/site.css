@@ -1,3 +1,7 @@
+body {
+    background-color: silver;
+}
+
 header a:hover {
     text-decoration: none;
 }
