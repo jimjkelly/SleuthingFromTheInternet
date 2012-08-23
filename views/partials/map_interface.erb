@@ -466,7 +466,8 @@ Max magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#ra
 Deviation from hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);" /> <div id="rangeDev"></div><br/>
 Limit to source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
 <span id="permalink"></span> <input type="submit" value="Update" onclick="refreshdata(); return false;"><br/>
-Marker size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select> Map style: <select id="mapstyleSelect" onclick="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
+Marker size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><br />
+Map style: <select id="mapstyleSelect" onclick="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
 </div>
 <div id="debug"></div>
 <div id="list"></div>
