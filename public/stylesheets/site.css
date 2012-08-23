@@ -9,3 +9,8 @@ header a:hover {
 header a {
     color:#005580;
 }
+
+/* Necessary to ensure images display correctly in the map */
+#theMap img {
+    max-width:none;
+}

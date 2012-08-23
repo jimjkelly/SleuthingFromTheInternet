@@ -6,7 +6,7 @@ Version 0.5 - 8/13/2012
 */
 
 /* Things you might want to change */
-var json_src = "http://sleuthingfromtheinternet.herokuapp.com/events.json"; //JSON data source
+var json_src = "<%= url('/events.json') %>"; //JSON data source
 var defZoomIn = 8; //default "max" zoom-in value
 
 //set up some global variables
@@ -83,9 +83,11 @@ var GmapGrayStyle = [
 
 //Basic initialization function that runs after load of body element
 function init() {
+	//resize the div to be the right proportion
+	$('#theMap').height($('#theMap').width() - 80);
 	//init the map
 	map = new google.maps.Map(document.getElementById('theMap'), {
-	  'zoom': 2,
+	  'zoom': 1,
 	  'center': new google.maps.LatLng(35,0),
 	  'mapTypeId': google.maps.MapTypeId.ROADMAP,
 	  'mapTypeControl':false,
@@ -106,6 +108,13 @@ function init() {
 			if(document.getElementById("permalink")) {
 				document.getElementById("permalink").innerHTML = permalink();
 			}
+			
+			zoomLevel = map.getZoom();
+			if(zoomLevel == 1) {
+			  $('#theMap').height($('#theMap').width() - 80);
+			} else {
+			  $('#theMap').height($('#theMap').width());
+			}
 	});	
 	google.maps.event.addListener(map, 'dragend', function() {
 			if(document.getElementById("permalink")) {
@@ -125,7 +134,6 @@ function init() {
 			if(fmtDepth(val.events.depth)>dataMaxDepth) dataMaxDepth = fmtDepth(val.events.depth);
 			if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source); 
 		});
-
 		
 		//update the UI elements, including sliders
 		document.getElementById("maxDepth").value = dataMaxDepth;
@@ -199,11 +207,16 @@ function init() {
 
 		//refresh all markers and whatnot
 		refreshdata();
+		
+		//center view
+		var latlngbounds = new google.maps.LatLngBounds();
+		map.setCenter(latlngbounds.getCenter(markers));
+		//map.fitBounds(latlngbounds);
+		
 		//make the table sortable
 		$("#event_table").tablesorter(); 
 	})
-	.error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});
-	
+	.error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});	
 }
 
 //clears out all markers and info windows
@@ -251,7 +264,7 @@ function refreshdata() {
 	  $.each(jdata, function(key, val) {
 		bounced = false;
 		var dateObj = new Date(0);
-		dateObj.setUTCSeconds(val.events.time);
+		dateObj.setUTCMilliseconds(Date.parse(val.events.time));
 		if(maxDepth!="") { if(fmtDepth(val.events.depth)>maxDepth) bounced=true; };
 		if(maxMag!="") { if(fmtDepth(val.events.mag)>maxMag) bounced=true; };
 
@@ -280,7 +293,7 @@ function refreshdata() {
 	 	}
 	  });
 
-	 //update the table output 
+	//update the table output 
 	document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
 	document.getElementById("status").innerHTML = markers.length+" events shown.";
 	document.getElementById("permalink").innerHTML = permalink();
