@@ -88,6 +88,7 @@ function init() {
 	//init the map
 	map = new google.maps.Map(document.getElementById('theMap'), {
 	  'zoom': 1,
+	  'minZoom':1,
 	  'center': new google.maps.LatLng(35,0),
 	  'mapTypeId': google.maps.MapTypeId.ROADMAP,
 	  'mapTypeControl':false,
@@ -147,6 +148,10 @@ function init() {
 			step: .1,
 			slide: function( event, ui ) {
 				$( "#maxMag" ).val(ui.value );
+				el = document.getElementById('maxDepth');
+				ev = document.createEvent('Event');
+				ev.initEvent('change', true, false);
+				el.dispatchEvent(ev);
 			}
 		});
 		$( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
@@ -158,6 +163,10 @@ function init() {
 			step: .01,
 			slide: function( event, ui ) {
 				$( "#maxDepth" ).val(ui.value );
+				el = document.getElementById('maxDepth');
+				ev = document.createEvent('Event');
+				ev.initEvent('change', true, false);
+				el.dispatchEvent(ev);
 			}
 		});
 		$( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
@@ -169,6 +178,10 @@ function init() {
 			step: 1,
 			slide: function( event, ui ) {
 				$( "#minDev" ).val(ui.value );
+				el = document.getElementById('maxDepth');
+				ev = document.createEvent('Event');
+				ev.initEvent('change', true, false);
+				el.dispatchEvent(ev);
 			}
 		});
 		$("#minDev" ).val($( "#rangeDev" ).slider( "value" ) );
@@ -265,6 +278,7 @@ function refreshdata() {
 		bounced = false;
 		var dateObj = new Date(0);
 		dateObj.setUTCMilliseconds(Date.parse(val.events.time));
+		
 		if(maxDepth!="") { if(fmtDepth(val.events.depth)>maxDepth) bounced=true; };
 		if(maxMag!="") { if(fmtDepth(val.events.mag)>maxMag) bounced=true; };
 
@@ -283,7 +297,7 @@ function refreshdata() {
 			markerInfo.push(val.events);
 			list+="<tr>";
 			list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
-			list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<10?"0"+dateObj.getUTCMonth():dateObj.getUTCMonth())+"-"+(dateObj.getUTCDay()<10?"0"+dateObj.getUTCDay():dateObj.getUTCDay()())+"</td>"
+			list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<11?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
 			list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
 			list+="<td>"+fmtDepth(val.events.depth)+"</td>";		
 			list+="<td>"+fmtMag(val.events.mag)+"</td>";
@@ -303,7 +317,7 @@ function refreshdata() {
 //code that adds a marker to Google Maps
 function addMarker(lat,lng,d,size) {
 	var dateObj = new Date(0);
-	dateObj.setUTCSeconds(d.time);
+	dateObj.setUTCMilliseconds(Date.parse(d.time));
 	
 	markers.push(new google.maps.Marker({
 	  position: new google.maps.LatLng(fmtLL(lat),fmtLL(lng)),
@@ -410,7 +424,7 @@ function restyle() {
 function getinfo(markerID, zoom) {
 	var d = markerInfo[markerID];
 	var dateObj = new Date(0);
-	dateObj.setUTCSeconds(d.time);
+	dateObj.setUTCMilliseconds(Date.parse(d.time));
 		var detail = "";
 		detail+= "<span class='detailinfo'>Source:</span> <a href='http://"+ d.source + d.url + "' target='_blank'>"+d.source+"</a><br>";
 		detail+= "<span class='detailinfo'>Lat/Lng:</span> <a href='http://maps.google.com/maps?t=h&q=loc:"+ d.latitude+","+d.longitude+"&z=8' target='_blank'>" + d.latitude + ", " + d.longitude+"</a><br>";
@@ -458,16 +472,16 @@ document.body.onload = init;
 <div id="theMap"></div>
 </td>
 <td id="sidecell">
-<div id="status">Downloading data...</div>
+<div id="status"></div><br />
 <div id="events"></div>
 <div id="constrainer">
-Max depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);"/> <div id="rangeDepth"></div><br/>
-Max magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);"/> <div id="rangeMag"></div><br/>
-Deviation from hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);" /> <div id="rangeDev"></div><br/>
+Max depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/> <div id="rangeDepth"></div><br/>
+Max magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
+Deviation from hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
 Limit to source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
 <span id="permalink"></span> <input type="submit" value="Update" onclick="refreshdata(); return false;"><br/>
 Marker size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><br />
-Map style: <select id="mapstyleSelect" onclick="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
+Map style: <select id="mapstyleSelect" onchange="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
 </div>
 <div id="debug"></div>
 <div id="list"></div>
