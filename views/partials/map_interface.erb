@@ -148,7 +148,7 @@ function init() {
 			step: .1,
 			slide: function( event, ui ) {
 				$( "#maxMag" ).val(ui.value );
-				el = document.getElementById('maxDepth');
+				el = document.getElementById('maxMag');
 				ev = document.createEvent('Event');
 				ev.initEvent('change', true, false);
 				el.dispatchEvent(ev);
@@ -278,9 +278,9 @@ function refreshdata() {
 		bounced = false;
 		var dateObj = new Date(0);
 		dateObj.setUTCMilliseconds(Date.parse(val.events.time));
-		
+  
 		if(maxDepth!="") { if(fmtDepth(val.events.depth)>maxDepth) bounced=true; };
-		if(maxMag!="") { if(fmtDepth(val.events.mag)>maxMag) bounced=true; };
+		if(maxMag!="") { if(val.events.mag>maxMag) bounced=true; };
 
 		if((60-dateObj.getMinutes())<dateObj.getMinutes()) {
 			deviation=(60-dateObj.getMinutes());
