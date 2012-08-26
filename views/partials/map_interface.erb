@@ -106,20 +106,11 @@ function init() {
 
 	//set some events to update the permalink if you do stuff to the map
 	google.maps.event.addListener(map, 'zoom_changed', function() {
-			if(document.getElementById("permalink")) {
-				document.getElementById("permalink").innerHTML = permalink();
-			}
-			
 			zoomLevel = map.getZoom();
 			if(zoomLevel == 1) {
 			  $('#theMap').height($('#theMap').width() - 80);
 			} else {
 			  $('#theMap').height($('#theMap').width());
-			}
-	});	
-	google.maps.event.addListener(map, 'dragend', function() {
-			if(document.getElementById("permalink")) {
-				document.getElementById("permalink").innerHTML = permalink();
 			}
 	});
 
@@ -310,7 +301,6 @@ function refreshdata() {
 	//update the table output 
 	document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
 	document.getElementById("status").innerHTML = markers.length+" events shown.";
-	document.getElementById("permalink").innerHTML = permalink();
 	$("#event_table").tablesorter(); 
 }
 
@@ -479,7 +469,6 @@ Max depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rang
 Max magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
 Deviation from hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
 Limit to source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
-<span id="permalink"></span> <input type="submit" value="Update" onclick="refreshdata(); return false;"><br/>
 Marker size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><br />
 Map style: <select id="mapstyleSelect" onchange="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
 </div>
