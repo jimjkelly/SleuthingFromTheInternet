@@ -95,7 +95,10 @@ header a {
     margin-left: 170px;
 }
 
-#subscriptionError {
+#subscriptionResult {
     text-align: center;
+}
+
+#subscriptionResult .error {
     color: red;
 }

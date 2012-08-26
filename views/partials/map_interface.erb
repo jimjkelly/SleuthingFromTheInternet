@@ -569,22 +569,29 @@ function subscribe() {
 		 "&deviation=" + $('dd[id=hourDeviationSubscribe]').text() +
 		 "&source=" + sources[$('dd[id=sourceLimitSubscribe]').text()] +
 		 "&digest=" + ($('input[name=digest]')=='true'?'true':'false')
-    console.log(params);
+    
     http.open("POST", url, true);
     
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
     http.onreadystatechange = function() {//Call a function when the state changes.
       if(http.readyState == 4 && http.status == 200) {
-	if (http.responseText == "SUBSCRIPTION ADDED") {
+	if (http.responseText == "SUBSCRIPTION ADDED" || http.responseText == "SUBSCRIPTION UPDATED") {
 	  // subscription accepted
-	} else if (http.responseText == "SUBSCRIPTION UPDATED") {
-	  // existing email updated
+	  $('div[id=subscriptionResult]').html('<h4 class="success">Subscription successfully added.</h4>');
+	  
+	  setTimeout(function() {
+	    $('#mask').fadeOut(1700);
+	    $('.window').fadeOut(1700);
+	    $('div[id=subscriptionResult]').html('');
+	  },1500);
 	} else {
-	  $(':submit').removeAttr('disabled');
-	  $('input[name=email]').removeAttr('readonly');
-	  $('div[id=subscriptionError]').html('<h4>' + http.responseText + '</h4>')
+	  $('div[id=subscriptionResult]').html('<h4 class="error">' + http.responseText + '</h4>')
 	}
+	
+	$(':submit').removeAttr('disabled');
+	$('input[name=email]').removeAttr('readonly');
+	
       }
     }
     http.send(params);
@@ -655,7 +662,7 @@ Map Style: <select id="mapstyleSelect" onchange="restyle();"><option value="1">G
 	  <br />
 	  <input type="checkbox" name="digest" value="true" checked="yes" /> <small>daily digest: uncheck to receive email alerts as soon as we receive data</small> 
 	</div>
-	<div id="subscriptionError">
+	<div id="subscriptionResult">
 	</div>
     </div>
     <div id="mask"></div>

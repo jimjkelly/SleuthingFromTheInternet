@@ -74,9 +74,9 @@ end
 
 post '/subscribe' do
   begin
-    require 'ruby-debug/debugger'
     if Subscribers.exists?(:email => params[:email])
-      Subscribers.update(Subscribers.find(:email => params[:email]),
+      #require 'ruby-debug/debugger' 
+      Subscribers.update(Subscribers.find(:first, :conditions => ['email = ?', params[:email]]),
                          {:depth => params[:depth],
                           :mag => params[:mag],
                           :time_deviation => params[:deviation],
@@ -97,5 +97,17 @@ post '/subscribe' do
     puts e.to_s
     puts e.backtrace.join("\n")
     'Generic error encountered.  Please try again later or open a ticket on <a href="https://github.com/jimjkelly/SleuthingFromTheInternet/issues">GitHub</a>'
+  end
+end
+
+get '/unsubscribe' do
+  begin
+    if Subscribers.exists?(:email => params[:email])
+      Subscribers.destroy_all('email = ?', params[:email])
+    end
+  rescue => e
+    puts e.to_s
+    puts e.backtrace.join("\n")
+    erb :unsubscribe
   end
 end
