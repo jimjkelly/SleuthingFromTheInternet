@@ -47,7 +47,6 @@ helpers do
 end
 
 get '/' do
-  #@events = Events.find(:all, :order => "id desc", :limit => 5).reverse
   erb :index
 end
 
@@ -70,5 +69,33 @@ get %r{/event\/([^\/?#\.]+)(?:\.|%2E)?([^\/?#]+)?} do
     @event.to_json
   else
     erb :event
+  end
+end
+
+post '/subscribe' do
+  begin
+    require 'ruby-debug/debugger'
+    if Subscribers.exists?(:email => params[:email])
+      Subscribers.update(Subscribers.find(:email => params[:email]),
+                         {:depth => params[:depth],
+                          :mag => params[:mag],
+                          :time_deviation => params[:deviation],
+                          :source => params[:source],
+                          :digest => params[:digest]
+                        })
+      'SUBSCRIPTION UPDATED'
+    else
+      Subscribers.create(:email => params[:email],
+                         :depth => params[:depth],
+                         :mag   => params[:mag],
+                         :time_deviation => params[:deviation],
+                         :source => params[:source],
+                         :digest => params[:digest])
+      'SUBSCRIPTION ADDED'
+    end
+  rescue => e
+    puts e.to_s
+    puts e.backtrace.join("\n")
+    'Generic error encountered.  Please try again later or open a ticket on <a href="https://github.com/jimjkelly/SleuthingFromTheInternet/issues">GitHub</a>'
   end
 end

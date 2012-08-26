@@ -14,3 +14,88 @@ header a {
 #theMap img {
     max-width:none;
 }
+
+#status a {
+    text-decoration: none;
+    font-weight: normal;
+}
+
+#permalink {
+    float: right;
+}
+
+#mask {
+  position:absolute;
+  left:0;
+  top:0;
+  z-index:9000;
+  background-color:#000;
+  display:none;
+}
+  
+#boxes .window {
+  position:fixed;
+  left:0;
+  top:0;
+  width:440px;
+  height:200px;
+  display:none;
+  z-index:9999;
+  padding:20px;
+}
+
+#boxes #dialog {
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+  width:670px; 
+  height:288px;
+  padding:10px;
+  background-color:#ffffff;
+}
+
+#boxes #dialog1 {
+  width:375px; 
+  height:203px;
+}
+
+#boxes #dialog p {
+    margin-left: auto;
+    margin-right: auto;
+    width:80%;
+}
+
+/* Override Twitter Bootstrap's close style */
+.close {
+    font-size: 12px;
+}
+
+#subscriptionSettings {
+    margin-left:auto;
+    margin-right:auto;
+    width:60%;
+}
+
+#subscriptionButton {
+    margin-left:auto;
+    margin-right:auto;
+    width:80%;
+}
+
+#subscriptionButton input {
+    margin-bottom: 0px;
+}
+
+/* Fix for "Deviation from Hour" not fitting in dt due to Twitter
+  Bootstrap making this fixed width */
+#subscriptionSettings dt {
+    width:  160px;
+}
+
+#subscriptionSettings dd {
+    margin-left: 170px;
+}
+
+#subscriptionError {
+    text-align: center;
+    color: red;
+}

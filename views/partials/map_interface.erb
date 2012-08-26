@@ -83,6 +83,9 @@ var GmapGrayStyle = [
 
 //Basic initialization function that runs after load of body element
 function init() {
+	// ensure we have a console to write to
+	if (!console) console = {log:function(){}};
+	
 	//resize the div to be the right proportion
 	$('#theMap').height($('#theMap').width() - 80);
 	//init the map
@@ -118,7 +121,7 @@ function init() {
 	$.getJSON(json_src, function(data) {
 		jdata = data;
 
-		sources[0] = " ";
+		sources[0] = "N/A";
 
 		//process it once we have it
 		$.each(jdata, function(key, val) {
@@ -146,6 +149,7 @@ function init() {
 			}
 		});
 		$( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
+		
 		$( "#rangeDepth" ).slider({
 			range: "min",
 			value: dataMaxDepth,
@@ -161,6 +165,7 @@ function init() {
 			}
 		});
 		$( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
+
 		$( "#rangeDev" ).slider({
 			range: "min",
 			value: dataMaxDepth,
@@ -221,6 +226,19 @@ function init() {
 		$("#event_table").tablesorter(); 
 	})
 	.error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});	
+	 
+	//if close button is clicked
+	$('.window .close').click(function (e) {
+	    //Cancel the link behavior
+	    e.preventDefault();
+	    $('#mask, .window').hide();
+	});     
+	 
+	//if mask is clicked
+	$('#mask').click(function () {
+	    $(this).hide();
+	    $('.window').hide();
+	});         
 }
 
 //clears out all markers and info windows
@@ -298,9 +316,91 @@ function refreshdata() {
 	 	}
 	  });
 
+	//udpate the permalink
+	maxDepth = document.getElementById("maxDepth").value;
+	maxMag = document.getElementById("maxMag").value;
+	minDev = document.getElementById("minDev").value;
+	markerSize = document.getElementById("markerSelect").value;
+	sourceLimit = document.getElementById("sourceSelect").value;
+	document.getElementById("permalink").innerHTML = "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ms="+markerSize+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'>permalink to settings</a> - <a href='#dialog' name='modal'>subscribe</a>";
+	
+	// Refresh subscription options
+	$( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));
+	$( "#maxMagSubscribe").text($( "#rangeMag" ).slider( "value" ));
+	$( "#hourDeviationSubscribe").text($( "#rangeDev" ).slider( "value" ));
+	$( "#sourceLimitSubscribe").text(sources[document.getElementById("sourceSelect").value])
+
+	//setup subscribe modal dialog - this is horribly inefficient
+	$('a[name=modal]').click(function(e) {
+	    //Cancel the link behavior
+	    e.preventDefault();
+	    //Get the A tag
+	    var id = $(this).attr('href');
+	 
+	    //Get the screen height and width
+	    var maskHeight = $(document).height();
+	    var maskWidth = $(window).width();
+	 
+	    //Set height and width to mask to fill up the whole screen
+	    $('#mask').css({'width':maskWidth,'height':maskHeight});
+	     
+	    //transition effect     
+	    $('#mask').fadeIn(1000);    
+	    $('#mask').fadeTo("slow",0.8);  
+	 
+	    //Get the window height and width
+	    var winH = $(window).height();
+	    var winW = $(window).width();
+		   
+	    //Set the popup window to center
+	    $(id).css('top',  winH/2-$(id).height()/2);
+	    $(id).css('left', winW/2-$(id).width()/2);
+	 
+	    //transition effect
+	    $(id).fadeIn(2000); 
+	 
+	});
+	
+	//if close button is clicked
+	$('.window .close').click(function (e) {
+		//Cancel the link behavior
+		e.preventDefault();
+		
+		$('#mask').hide();
+		$('.window').hide();
+	});		
+	
+	//if mask is clicked
+	$('#mask').click(function () {
+		$(this).hide();
+		$('.window').hide();
+	});			
+
+	$(window).resize(function () {
+	 
+ 		var box = $('#boxes .window');
+ 
+        //Get the screen height and width
+        var maskHeight = $(document).height();
+        var maskWidth = $(window).width();
+      
+        //Set height and width to mask to fill up the whole screen
+        $('#mask').css({'width':maskWidth,'height':maskHeight});
+               
+        //Get the window height and width
+        var winH = $(window).height();
+        var winW = $(window).width();
+
+        //Set the popup window to center
+        box.css('top',  winH/2 - box.height()/2);
+        box.css('left', winW/2 - box.width()/2);
+	 
+	});
+
+
 	//update the table output 
 	document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
-	document.getElementById("status").innerHTML = markers.length+" events shown.";
+	document.getElementById("status").innerHTML = markers.length+" events shown";
 	$("#event_table").tablesorter(); 
 }
 
@@ -442,14 +542,53 @@ function getinfo(markerID, zoom) {
 		}
 }
 
-//an up-to-date link to the current settings
-function permalink() {
-	maxDepth = document.getElementById("maxDepth").value;
-	maxMag = document.getElementById("maxMag").value;
-	minDev = document.getElementById("minDev").value;
-	markerSize = document.getElementById("markerSelect").value;
-	sourceLimit = document.getElementById("sourceSelect").value;
-	return "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ms="+markerSize+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'>Permalink to settings</a>";
+function verifyEmail() {
+  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  
+  if(re.test($('input[name=email]').val())) {
+    $('span[id=emailOK]').html('<a class="btn btn-small btn-success"><i class="icon-ok icon-white"></i></a>');
+    return true;
+  } else {
+    $('span[id=emailOK]').html('<a class="btn btn-small btn-danger"><i class="icon-remove icon-white"></i></a>');
+    return false;
+  }
+}
+
+function subscribe() {
+  // If it's not verified, we can return, as verifyEmail notifies the user in
+  // the UI
+  if (verifyEmail()) {
+    $(':submit').attr('disabled', 'disabled');
+    $('input[name=email]').attr('readonly', 'readonly');
+     
+    var http = new XMLHttpRequest();
+    var url = "<%= url('/subscribe') %>";
+    var params = "email=" + $('input[name=email]').val() +
+		 "&depth=" + $('dd[id=maxDepthSubscribe]').text() +
+		 "&mag=" + $('dd[id=maxMagSubscribe]').text() +
+		 "&deviation=" + $('dd[id=hourDeviationSubscribe]').text() +
+		 "&source=" + sources[$('dd[id=sourceLimitSubscribe]').text()] +
+		 "&digest=" + ($('input[name=digest]')=='true'?'true':'false')
+    console.log(params);
+    http.open("POST", url, true);
+    
+    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    http.onreadystatechange = function() {//Call a function when the state changes.
+      if(http.readyState == 4 && http.status == 200) {
+	if (http.responseText == "SUBSCRIPTION ADDED") {
+	  // subscription accepted
+	} else if (http.responseText == "SUBSCRIPTION UPDATED") {
+	  // existing email updated
+	} else {
+	  $(':submit').removeAttr('disabled');
+	  $('input[name=email]').removeAttr('readonly');
+	  $('div[id=subscriptionError]').html('<h4>' + http.responseText + '</h4>')
+	}
+      }
+    }
+    http.send(params);
+  }
 }
 
 document.body.onload = init;
@@ -462,19 +601,63 @@ document.body.onload = init;
 <div id="theMap"></div>
 </td>
 <td id="sidecell">
-<div id="status"></div><br />
+<div id="status"></div>
+<div id="permalink"></div><br />
 <div id="events"></div>
 <div id="constrainer">
-Max depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/> <div id="rangeDepth"></div><br/>
-Max magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
-Deviation from hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
-Limit to source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
-Marker size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><br />
-Map style: <select id="mapstyleSelect" onchange="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
+Max Depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/> <div id="rangeDepth"></div><br/>
+Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
+Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
+Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
+Marker Size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><br />
+Map Style: <select id="mapstyleSelect" onchange="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
 </div>
 <div id="debug"></div>
 <div id="list"></div>
 </td>
 </tr>
 </table>
+
+<div id="boxes">
+    <div id="dialog" class="window">
+	<b>subscribe</b> | 
+	<a href="#" class="close">close</a>
+	receive email alerts when new events match your current settings
+	<br />
+	<br />
+	<p>
+	Current Settings:
+	</p>
+	<div id="subscriptionSettings">
+	  <dl class="dl-horizontal">
+	    <div class="row">
+	      <dt>Max Depth:</dt>
+	      <dd id="maxDepthSubscribe"></dd>
+	    </div>
+	    <div class="row">
+	      <dt>Max Magnitude:</dt>
+	      <dd id="maxMagSubscribe"></dd>
+	    </div>
+	    <div class="row">
+	      <dt>Deviation from Hour:</dt>
+	      <dd id="hourDeviationSubscribe"></dd>
+	    </div>
+	    <div class="row">
+	      <dt>Limit to Source:</dt>
+	      <dd id="sourceLimitSubscribe"></dd>
+	    </div>
+	  </dl>
+	</div>
+	<div id="subscriptionButton">
+	  <button type="submit" class="btn" onclick="subscribe()">Subscribe</button>
+	  <input name="email" onchange="verifyEmail()" type="text" placeholder="your@email.com…" />
+	  <span id="emailOK"></span>
+	  <br />
+	  <input type="checkbox" name="digest" value="true" checked="yes" /> <small>daily digest: uncheck to receive email alerts as soon as we receive data</small> 
+	</div>
+	<div id="subscriptionError">
+	</div>
+    </div>
+    <div id="mask"></div>
+</div>
 

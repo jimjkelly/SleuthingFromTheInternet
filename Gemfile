@@ -12,6 +12,7 @@ group :production do
 end
 
 group :development do
+	gem 'debugger'
 	gem "sqlite3"
         gem "Rack"
 end
