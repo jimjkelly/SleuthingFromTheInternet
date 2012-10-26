@@ -10,6 +10,28 @@ header a {
     color:#005580;
 }
 
+.hero-unit {
+    position: relative;
+}
+
+#release {
+    background: #005580;
+    position: absolute;
+    top: 10%;
+    right: -4px;
+    padding: 5px;
+    float:  right;
+    text-align: center;
+    width: 15%;
+    color: #EEE;
+}
+
+.shadow {
+    -webkit-box-shadow: -3px 3px 5px black;
+    -moz-box-shadow: -3px 3px 5px black;
+         box-shadow: -3px 3px 5px black;
+}
+
 /* Necessary to ensure images display correctly in the map */
 #theMap img {
     max-width:none;

@@ -59,6 +59,12 @@ practical, and the database may be blown out in favor of a new schema.  If
 you are doing local development work, be cognizant of changes that may necessitate
 this.
 
+Run the server like so:
+
+	bundle exec rackup config.ru -p 4567
+	
+or whatever port you would like.
+
 License
 =======
 

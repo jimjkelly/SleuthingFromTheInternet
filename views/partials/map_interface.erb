@@ -8,6 +8,7 @@ Version 0.5 - 8/13/2012
 /* Things you might want to change */
 var json_src = "<%= url('/events.json') %>"; //JSON data source
 var defZoomIn = 8; //default "max" zoom-in value
+var markerSize = 1; // set marker size constant
 
 //set up some global variables
 var jdata = []; //array for JSON data
@@ -83,6 +84,8 @@ var GmapGrayStyle = [
 
 //Basic initialization function that runs after load of body element
 function init() {
+	var deviation;
+	var list = "";
 	// ensure we have a console to write to
 	if (!console) console = {log:function(){}};
 	
@@ -122,14 +125,36 @@ function init() {
 		jdata = data;
 
 		sources[0] = "N/A";
-
+		clearmarkers();
 		//process it once we have it
 		$.each(jdata, function(key, val) {
 			if(fmtMag(val.events.mag)>dataMaxMag) dataMaxMag = fmtMag(val.events.mag);
 			if(fmtDepth(val.events.depth)>dataMaxDepth) dataMaxDepth = fmtDepth(val.events.depth);
-			if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source); 
+			if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source);
+			
+		      // THIS NEEDS TO BE RECTIFIED, IT IS ORIGINALLY FROM REFRESH DATA.  THE BOUNCED CRAP NEEDS TO BE PULLED OUT AND MOVED BACK TO REFRESH DATA
+		      // add markers
+		      dateObj = getDateFromTime(val.events.time);
+		      deviation = getDeviationFromDate(dateObj);
+		      
+		      addMarker(val.events.latitude,val.events.longitude, val.events, markerSize);
+		      markerInfo.push(val.events);
+		      
+		      list+="<tr id=\"event" + key + "\">";
+		      list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
+		      list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<11?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
+		      list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
+		      list+="<td>"+fmtDepth(val.events.depth)+"</td>";		
+		      list+="<td>"+fmtMag(val.events.mag)+"</td>";
+		      list+="<td>"+deviation+"</td>";
+		      list+="<td><a title='Open a new window with Google Maps zoomed in on the location of this event'  href='http://maps.google.com/maps?t=h&q=loc:"+ fmtLL(val.events.latitude)+","+fmtLL(val.events.longitude)+"&z=8' target='_blank'><img src='lib/external-ltr.png'/></a></td>";
+		      list+="</tr>";
 		});
-		
+
+
+		// Add all elements to the table
+		document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
+
 		//update the UI elements, including sliders
 		document.getElementById("maxDepth").value = dataMaxDepth;
 		document.getElementById("maxMag").value = dataMaxMag;
@@ -203,9 +228,6 @@ function init() {
 		if(url_vars["src"]) {
 			document.getElementById("sourceSelect").value = url_vars["src"];
 		}
-		if(url_vars["ms"]) {
-			document.getElementById("markerSelect").value = url_vars["ms"];
-		}
 		if(url_vars["zm"]) {
 			map.setZoom(parseInt(url_vars["zm"]));		
 		}
@@ -223,7 +245,9 @@ function init() {
 		//map.fitBounds(latlngbounds);
 		
 		//make the table sortable
-		$("#event_table").tablesorter(); 
+		if ($("#event_table").find("tr").size() > 1) {
+		  $("#event_table").tablesorter();
+		}
 	})
 	.error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});	
 	 
@@ -238,7 +262,7 @@ function init() {
 	$('#mask').click(function () {
 	    $(this).hide();
 	    $('.window').hide();
-	});         
+	});
 }
 
 //clears out all markers and info windows
@@ -262,67 +286,67 @@ function getUrlVars(url) {
     return vars;
 }
 
+function getDateFromTime(time) {
+  var dateObj = new Date(0);
+  dateObj.setUTCMilliseconds(Date.parse(time));
+  return dateObj;
+}
+
+function getDeviationFromDate(dateObj) {
+  var deviation;
+  
+  if((60-dateObj.getMinutes())<dateObj.getMinutes()) {
+    deviation=(60-dateObj.getMinutes());
+  } else {
+    deviation=dateObj.getMinutes();
+  }
+  
+  return deviation;
+}
+
 //main "refresh" function that updates displayed data based on settings
 function refreshdata() {
-	var items = [];
 	var bounced;
 	var maxDepth;
 	var maxMag;
 	var minDev;
-	var markerSize;
 	var deviation;
-	var list = "";
+	var visible = 0;
 	maxDepth = document.getElementById("maxDepth").value;
 	maxMag = document.getElementById("maxMag").value;
 	minDev = document.getElementById("minDev").value;
-	markerSize = document.getElementById("markerSelect").value;
 	sourceLimit = document.getElementById("sourceSelect").value;
-
-	if(markerSize<1) markerSize = 1;
-
-	clearmarkers();
 	
-	//iterates over all JSON data and checks to see if it good to display.
-	  $.each(jdata, function(key, val) {
-		bounced = false;
-		var dateObj = new Date(0);
-		dateObj.setUTCMilliseconds(Date.parse(val.events.time));
-  
-		if(maxDepth!="") { if(fmtDepth(val.events.depth)>maxDepth) bounced=true; };
-		if(maxMag!="") { if(val.events.mag>maxMag) bounced=true; };
+	// here we need to iterate through markers and get turn on ones in the
+	// view criteria
+	for (var i = 0; i < markers.length; i++) {
+	  bounced = false;
+	  
+	  if(maxDepth!="") { if(fmtDepth(markerInfo[i].depth)>maxDepth) bounced=true; };
+	  if(maxMag!="") { if(markerInfo[i].mag>maxMag) bounced=true; };
 
-		if((60-dateObj.getMinutes())<dateObj.getMinutes()) {
-			deviation=(60-dateObj.getMinutes());
-		} else {
-			deviation=dateObj.getMinutes();
-		}
+	  dateObj = getDateFromTime(markerInfo[i].time)
+	  deviation = getDeviationFromDate(dateObj);
 
-		if(sourceLimit>0) { if(val.events.source != sources[sourceLimit]) bounced = true; }
-
-		if(minDev!="") { if(deviation>minDev) bounced = true; };
-						
-		if(bounced==false) {
-			addMarker(val.events.latitude,val.events.longitude, val.events, markerSize);
-			markerInfo.push(val.events);
-			list+="<tr>";
-			list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
-			list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<11?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
-			list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
-			list+="<td>"+fmtDepth(val.events.depth)+"</td>";		
-			list+="<td>"+fmtMag(val.events.mag)+"</td>";
-			list+="<td>"+deviation+"</td>";
-			list+="<td><a title='Open a new window with Google Maps zoomed in on the location of this event'  href='http://maps.google.com/maps?t=h&q=loc:"+ fmtLL(val.events.latitude)+","+fmtLL(val.events.longitude)+"&z=8' target='_blank'><img src='lib/external-ltr.png'/></a></td>";
-			list+="</tr>";
-	 	}
-	  });
-
+	  if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
+	  if(minDev!="") { if(deviation>minDev) bounced = true; };
+	  
+	  if (bounced) {
+	    markers[i].setVisible(false);
+	    $("#event"+i).hide();
+	  } else {
+	    markers[i].setVisible(true);
+	    $("#event"+i).show();
+	    visible++;
+	  }
+	}
+	
 	//udpate the permalink
 	maxDepth = document.getElementById("maxDepth").value;
 	maxMag = document.getElementById("maxMag").value;
 	minDev = document.getElementById("minDev").value;
-	markerSize = document.getElementById("markerSelect").value;
 	sourceLimit = document.getElementById("sourceSelect").value;
-	document.getElementById("permalink").innerHTML = "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ms="+markerSize+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'>permalink to settings</a> - <a href='#dialog' name='modal'>subscribe</a>";
+	document.getElementById("permalink").innerHTML = "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'>permalink to settings</a> - <a href='#dialog' name='modal'>subscribe</a>";
 	
 	// Refresh subscription options
 	$( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));
@@ -399,9 +423,10 @@ function refreshdata() {
 
 
 	//update the table output 
-	document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
-	document.getElementById("status").innerHTML = markers.length+" events shown";
-	$("#event_table").tablesorter(); 
+	document.getElementById("status").innerHTML = visible+" events shown";
+	if($("#event_table").find("tr").size() > 1) {
+	  $("#event_table").tablesorter();
+	}
 }
 
 //code that adds a marker to Google Maps
@@ -411,6 +436,7 @@ function addMarker(lat,lng,d,size) {
 	
 	markers.push(new google.maps.Marker({
 	  position: new google.maps.LatLng(fmtLL(lat),fmtLL(lng)),
+	  visible: false,
 	  map: map,
 	  draggable: false,
 	  icon: t[parseInt(size)],
@@ -484,30 +510,6 @@ function fmtLL(ll) {
 		ll = ll.substr(0,ll.indexOf("W")-1);
 	}
 	return parseFloat(ll);
-}
-
-//changes the Google Maps style options 
-function restyle() {
-	switch(document.getElementById("mapstyleSelect").value) {
-		case("1"):
-			map.setOptions({styles: GmapGrayStyle});
-			map.setOptions({'mapTypeId': google.maps.MapTypeId.ROADMAP});
-		break;
-		case("2"):
-			map.setOptions({styles: ""});
-			map.setOptions({'mapTypeId': google.maps.MapTypeId.ROADMAP});
-		break;
-		case("3"):
-			map.setOptions({styles: ""});
-			map.setOptions({'mapTypeId': google.maps.MapTypeId.TERRAIN});
-		break;
-		case("4"):
-			map.setOptions({styles: ""});
-			map.setOptions({'mapTypeId': google.maps.MapTypeId.SATELLITE});
-		break;
-
-	}
-
 }
 
 //popups up a little information window for a given marker. will zoom in if told to.
@@ -616,8 +618,6 @@ Max Depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rang
 Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
 Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
 Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
-Marker Size: <select id="markerSelect" onchange="refreshdata();"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><br />
-Map Style: <select id="mapstyleSelect" onchange="restyle();"><option value="1">Gray</option><option value="2">Normal</option><option value="3">Terrain</option><option value="4">Satellite</option></select>
 </div>
 <div id="debug"></div>
 <div id="list"></div>
