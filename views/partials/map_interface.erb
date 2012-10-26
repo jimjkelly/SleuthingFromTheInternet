@@ -6,7 +6,7 @@ Version 0.5 - 8/13/2012
 */
 
 /* Things you might want to change */
-var json_src = "<%= url('/events.json') %>"; //JSON data source
+var json_src = "<%= url('/events.json?limit=500') %>"; //JSON data source
 var defZoomIn = 8; //default "max" zoom-in value
 var markerSize = 1; // set marker size constant
 
@@ -129,9 +129,6 @@ function init() {
 		clearmarkers();
 		//process it once we have it
 		$.each(jdata, function(key, val) {
-		      if (count > 1000) {
-			return;
-		      }
 		      if(fmtMag(val.events.mag)>dataMaxMag) dataMaxMag = fmtMag(val.events.mag);
 		      if(fmtDepth(val.events.depth)>dataMaxDepth) dataMaxDepth = fmtDepth(val.events.depth);
 		      if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source);

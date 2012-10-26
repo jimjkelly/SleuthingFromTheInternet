@@ -50,8 +50,14 @@ get '/' do
   erb :index
 end
 
+
 get '/events.?:format?' do
-  @events = Events.all
+  if params[:limit]
+    @events = Events.find(:all, :order => "id desc", :limit => params[:limit])
+  else 
+    @events = Events.all
+  end
+  
   if params[:format] and params[:format].downcase == 'json'
     content_type :json
     @events.to_json
