@@ -143,7 +143,7 @@ function init() {
 		      
 		      list+="<tr id=\"event" + key + "\">";
 		      list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
-		      list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<11?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
+		      list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<9?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
 		      list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
 		      list+="<td>"+fmtDepth(val.events.depth)+"</td>";		
 		      list+="<td>"+fmtMag(val.events.mag)+"</td>";
