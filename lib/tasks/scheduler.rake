@@ -46,7 +46,13 @@ desc "This task is called by the Heroku scheduler add-on to update Events"
 task :update_events => :environment do
     puts "Updating events..."
     ['update_usgs', 'update_isc', 'update_fnet'].each do |source|
-      Rake::Task[source].invoke
+        begin
+            Rake::Task[source].invoke
+        rescue
+            $stderr.puts(' Unable to run ' + source + ' due to unknown problem.')
+            p $!
+            puts $@
+        end
     end
     puts "Finished."
 end
@@ -81,6 +87,7 @@ task :update_isc => :environment do
         time = Time.parse(row.children[2].text).utc
         latitude = row.children[4].text
         longitude = row.children[6].text
+        
         depth = row.children[8].text
         mag = row.children[10].text
         url = row.at_xpath('.//td/span[@dir="ltr"]/a')['href']
@@ -121,7 +128,18 @@ end
 
 # Time should be a Time utc object
 def AddEvent(time, latitude, longitude, depth, mag, url, source)
-    puts time
+    # First do some normalization:
+    mag = mag.to_s.gsub(/[^0-9.]/, '')
+    
+    if depth.to_s.include? "shallow"
+        depth = "0"
+    else
+        depth = depth.to_s.gsub(/[^0-9.]/, '')
+    end
+    
+    latitude = latitude.to_s.gsub(/[^0-9.]/, '')
+    longitude = longitude.to_s.gsub(/[^0-9.]/, '')
+    
     unless Events.exists?(:url => url) # URLs should be unique
         Events.create(:mag => mag,
                       :time => time,
