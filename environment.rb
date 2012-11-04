@@ -23,7 +23,11 @@ end
 configure :production do
   db = URI.parse(ENV['DATABASE_URL'])
   puts "WTF!!!!"
-  puts db
+  puts db.host
+  puts db.user
+  puts db.password
+  puts db.path[1..-1]
+  puts "OMG"
   ActiveRecord::Base.establish_connection(
     :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
     :host     => db.host,
