@@ -6,6 +6,7 @@ require 'db/models'
 require 'logger'
 require 'rubygems'
 require 'bundler'
+require 'uri'
 
 Bundler.setup
 Bundler.require
