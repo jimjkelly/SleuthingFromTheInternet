@@ -6,12 +6,9 @@ require 'db/models'
 require 'logger'
 require 'rubygems'
 require 'bundler'
-require 'logger'
 
 Bundler.setup
 Bundler.require
-
-require 'sinatra'
 
 Time.zone = "UTC"
 ActiveRecord::Base.time_zone_aware_attributes = true
