@@ -3,26 +3,6 @@ require File.dirname(__FILE__) + '/environment.rb'
 set :raise_errors, false
 set :show_exceptions, false
 
-configure :development do
-  enable :logging, :dump_errors
-  set :logging, Logger::DEBUG
-  set :raise_errors, true
-  set :database, 'sqlite:///db/development.db'
-end
-
-configure :production do
-  db = URI.parse(ENV['SHARED_DATABASE_URL'] || 'postgres://localhost/mydb')
-
-  ActiveRecord::Base.establish_connection(
-    :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
-    :host     => db.host,
-    :username => db.user,
-    :password => db.password,
-    :database => db.path[1..-1],
-    :encoding => 'utf8'
-  )
-end
-
 error do
   e = request.env['sinatra.error']
   puts e.to_s

@@ -20,13 +20,15 @@ configure :development do
                                           :database  => "db/development.db")
 end
 
+configure :development do
+  enable :logging, :dump_errors
+  set :logging, Logger::DEBUG
+  set :raise_errors, true
+  set :database, 'sqlite:///db/development.db'
+end
+
 configure :production do
   db = URI.parse(ENV['DATABASE_URL'])
-
-  puts "host: " + db.host
-  puts "user: " + db.user
-  puts "pass: " + db.password
-  puts "path: " + db.path[1..-1]
 
   ActiveRecord::Base.establish_connection(
     :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
