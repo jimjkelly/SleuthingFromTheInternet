@@ -1,18 +1,15 @@
 html, body, #theMap {
-    width: 100%;
+    margin: 0;
+    padding: 0;
     height: 100%;
 }
 
 html {
-    overflow: hidden;
-    position: relative;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
 body {
-    clear: both;
-    padding: 0;
-    margin: 0;
+    display: block;
 }
 
 header {
@@ -102,6 +99,11 @@ Super-hacky, but hey.
     opacity: .85;
 }
 
+#theMap {
+    position: relative;
+    overflow: hidden;
+    -webkit-transform: trasformZ(0);
+}
 
 /* Necessary to ensure images display correctly in the map */
 #theMap img {
