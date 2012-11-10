@@ -11,7 +11,6 @@ var defZoomIn = 8; //default "max" zoom-in value
 var markerSize = 1; // set marker size constant
 
 //set up some global variables
-var jdata = []; //array for JSON data
 var markers = []; //array for markers
 var markerInfo = []; //array for marker "details"
 var infowindow; //marker details window
@@ -90,15 +89,21 @@ function init() {
 	// ensure we have a console to write to
 	if (!console) console = {log:function(){}};
 	
-	//resize the div to be the right proportion
-	$('#theMap').height($('#theMap').width() - 80);
 	//init the map
 	map = new google.maps.Map(document.getElementById('theMap'), {
-	  'zoom': 1,
-	  'minZoom':1,
+	  'zoom': 2,
+	  'minZoom':2,
 	  'center': new google.maps.LatLng(35,0),
 	  'mapTypeId': google.maps.MapTypeId.ROADMAP,
 	  'mapTypeControl':false,
+	  'zoomControl':true,
+	  'panControl':true,
+	  'panControlOptions': {
+	    position:google.maps.ControlPosition.TOP_RIGHT
+	  },
+	  'zoomControlOptions': {
+	    position:google.maps.ControlPosition.TOP_RIGHT
+	  },
 	  'streetViewControl':false
 	});
 
@@ -110,30 +115,51 @@ function init() {
 	t[2] = new google.maps.MarkerImage('lib/target-2.png',new google.maps.Size(20,20),new google.maps.Point(0,0),new google.maps.Point(10, 10));
 	t[3] = new google.maps.MarkerImage('lib/target-3.png',new google.maps.Size(30,30),new google.maps.Point(0,0),new google.maps.Point(15, 15));
 	t[4] = new google.maps.MarkerImage('lib/target-4.png',new google.maps.Size(40,40),new google.maps.Point(0,0),new google.maps.Point(20, 20));
-
-	//set some events to update the permalink if you do stuff to the map
+	
 	google.maps.event.addListener(map, 'zoom_changed', function() {
 			zoomLevel = map.getZoom();
-			if(zoomLevel == 1) {
-			  $('#theMap').height($('#theMap').width() - 80);
-			} else {
-			  $('#theMap').height($('#theMap').width());
-			}
 	});
 
+	//this is supposed to set things up to automatically recenter and resize
+	//when the window does, but doesn't work.  should fix later.
+	if (window.attachEvent) {
+	  window.attachEvent("onresize", function() {this.map.onResize()});
+	  window.attachEvent("onload", function() {this.map.onResize()});
+	} else if (window.addEventListener) {
+	  window.addEventListener("resize",
+				  function() {this.map.onResize()}, false);
+	  window.addEventListener("load",
+				  function() {this.map.onResize()}, false);
+	}
+	
+	google.maps.event.addListenerOnce(map, 'idle', function(){
+	  var copyrightAttr = $('#theMap div div[style*="z-index: 1000001;"]');
+	  //copyrightAttr.css('bottom', copyrightAttr.height());
+	  copyrightAttr.css('top', '0');
+	  copyrightAttr.attr('id', 'copyrightAttr');
+	  
+	  var googleAttr = $('#theMap div div[style*="z-index: 1000000;"]');
+	  googleAttr.css('top', copyrightAttr.height());
+	  googleAttr.css('right', '0');
+	  googleAttr.attr('id', 'googleAttr');
+	  
+	  var controlHeight = googleAttr.height() + copyrightAttr.height();
+	  
+	  var controls = $('#theMap div div div[style^="cursor"]').parent();
+	  //controls.css('top', controlHeight);
+	  controls.attr('id', 'controls');
+	});
+	
 	//get the data	
 	$.getJSON(json_src, function(data) {
-		jdata = data;
-
 		sources[0] = "N/A";
 		clearmarkers();
 		//process it once we have it
-		$.each(jdata, function(key, val) {
-		      if(fmtMag(val.events.mag)>dataMaxMag) dataMaxMag = fmtMag(val.events.mag);
-		      if(fmtDepth(val.events.depth)>dataMaxDepth) dataMaxDepth = fmtDepth(val.events.depth);
+		$.each(data, function(key, val) {
+		      if(val.events.mag>dataMaxMag) dataMaxMag = val.events.mag;
+		      if(val.events.depth>dataMaxDepth) dataMaxDepth = val.events.depth;
 		      if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source);
 		      
-		      // THIS NEEDS TO BE RECTIFIED, IT IS ORIGINALLY FROM REFRESH DATA.  THE BOUNCED CRAP NEEDS TO BE PULLED OUT AND MOVED BACK TO REFRESH DATA
 		      // add markers
 		      dateObj = getDateFromTime(val.events.time);
 		      deviation = getDeviationFromDate(dateObj);
@@ -145,127 +171,127 @@ function init() {
 		      list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
 		      list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<9?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
 		      list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
-		      list+="<td>"+fmtDepth(val.events.depth)+"</td>";		
-		      list+="<td>"+fmtMag(val.events.mag)+"</td>";
+		      list+="<td>"+val.events.depth+"</td>";		
+		      list+="<td>"+val.events.mag+"</td>";
 		      list+="<td>"+deviation+"</td>";
-		      list+="<td><a title='Open a new window with Google Maps zoomed in on the location of this event'  href='http://maps.google.com/maps?t=h&q=loc:"+ fmtLL(val.events.latitude)+","+fmtLL(val.events.longitude)+"&z=8' target='_blank'><img src='lib/external-ltr.png'/></a></td>";
+		      list+="<td><a title='Open a new window with Google Maps zoomed in on the location of this event'  href='http://maps.google.com/maps?t=h&q=loc:"+ val.events.latitude+","+val.events.longitude+"&z=8' target='_blank'><img src='lib/external-ltr.png'/></a></td>";
 		      list+="</tr>";
 		      
 		      count++;
 		});
-
-
-		// Add all elements to the table
-		document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
-
-		//update the UI elements, including sliders
-		document.getElementById("maxDepth").value = dataMaxDepth;
-		document.getElementById("maxMag").value = dataMaxMag;
-
-		$( "#rangeMag" ).slider({
-			range: "min",
-			value: dataMaxMag,
-			min: 0,
-			max: dataMaxMag,
-			step: .1,
-			slide: function( event, ui ) {
-				$( "#maxMag" ).val(ui.value );
-				el = document.getElementById('maxMag');
-				ev = document.createEvent('Event');
-				ev.initEvent('change', true, false);
-				el.dispatchEvent(ev);
-			}
-		});
-		$( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
-		
-		$( "#rangeDepth" ).slider({
-			range: "min",
-			value: dataMaxDepth,
-			min: 0,
-			max: dataMaxDepth,
-			step: .01,
-			slide: function( event, ui ) {
-				$( "#maxDepth" ).val(ui.value );
-				el = document.getElementById('maxDepth');
-				ev = document.createEvent('Event');
-				ev.initEvent('change', true, false);
-				el.dispatchEvent(ev);
-			}
-		});
-		$( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
-
-		$( "#rangeDev" ).slider({
-			range: "min",
-			value: dataMaxDepth,
-			min: 0,
-			max: 30,
-			step: 1,
-			slide: function( event, ui ) {
-				$( "#minDev" ).val(ui.value );
-				el = document.getElementById('maxDepth');
-				ev = document.createEvent('Event');
-				ev.initEvent('change', true, false);
-				el.dispatchEvent(ev);
-			}
-		});
-		$("#minDev" ).val($( "#rangeDev" ).slider( "value" ) );
-
-		for(var i in sources) {
-			document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);			
-		}
-
-		//if we have URL variables, then update UI based on them
-		url_vars = getUrlVars();
-		if(url_vars["dp"]) {
-			document.getElementById("maxDepth").value = url_vars["dp"];
-			$("#rangeDepth").slider("value", url_vars["dp"]);
-		}
-		if(url_vars["mg"]) {
-			document.getElementById("maxMag").value = url_vars["mg"];
-			$("#rangeMag").slider("value", url_vars["mg"]);
-		}
-		if(url_vars["dv"]) {
-			document.getElementById("minDev").value = url_vars["dv"];
-			$("#rangeDev").slider("value", url_vars["dv"]);
-		}
-		if(url_vars["src"]) {
-			document.getElementById("sourceSelect").value = url_vars["src"];
-		}
-		if(url_vars["zm"]) {
-			map.setZoom(parseInt(url_vars["zm"]));		
-		}
-		if(url_vars["ll"]) {
-			var ll = url_vars["ll"].split(",");
-			map.panTo(new google.maps.LatLng(ll[0],ll[1]));
-		}
-
-		//refresh all markers and whatnot
-		refreshdata();
-		
-		//center view
-		var latlngbounds = new google.maps.LatLngBounds();
-		map.setCenter(latlngbounds.getCenter(markers));
-		//map.fitBounds(latlngbounds);
-		
-		//make the table sortable
-		if ($("#event_table").find("tr").size() > 1) {
-		  $("#event_table").tablesorter();
-		}
-	})
-	.error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});	
-	 
-	//if close button is clicked
-	$('.window .close').click(function (e) {
-	    //Cancel the link behavior
-	    e.preventDefault();
-	    $('#mask, .window').hide();
-	});     
-	 
-	//if mask is clicked
-	$('#mask').click(function () {
-	    $(this).hide();
-	    $('.window').hide();
-	});
+	
+        // Add all elements to the table
+        /*document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
+  
+        //update the UI elements, including sliders
+        document.getElementById("maxDepth").value = dataMaxDepth;
+        document.getElementById("maxMag").value = dataMaxMag;
+  
+        $( "#rangeMag" ).slider({
+            range: "min",
+            value: dataMaxMag,
+            min: 0,
+            max: dataMaxMag,
+            step: .1,
+            slide: function( event, ui ) {
+                $( "#maxMag" ).val(ui.value );
+                el = document.getElementById('maxMag');
+                ev = document.createEvent('Event');
+                ev.initEvent('change', true, false);
+                el.dispatchEvent(ev);
+            }
+        });
+        $( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
+         
+        $( "#rangeDepth" ).slider({
+            range: "min",
+            value: dataMaxDepth,
+            min: 0,
+            max: dataMaxDepth,
+            step: .01,
+            slide: function( event, ui ) {
+                $( "#maxDepth" ).val(ui.value );
+                el = document.getElementById('maxDepth');
+                ev = document.createEvent('Event');
+                ev.initEvent('change', true, false);
+                el.dispatchEvent(ev);
+            }
+        });
+        $( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
+  
+        $( "#rangeDev" ).slider({
+            range: "min",
+            value: dataMaxDepth,
+            min: 0,
+            max: 30,
+            step: 1,
+            slide: function( event, ui ) {
+                $( "#minDev" ).val(ui.value );
+                el = document.getElementById('maxDepth');
+                ev = document.createEvent('Event');
+                ev.initEvent('change', true, false);
+                el.dispatchEvent(ev);
+            }
+        });
+        $("#minDev" ).val($( "#rangeDev" ).slider( "value" ) );
+  
+        for(var i in sources) {
+            document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
+        }
+  
+        //if we have URL variables, then update UI based on them
+        url_vars = getUrlVars();
+        if(url_vars["dp"]) {
+            document.getElementById("maxDepth").value = url_vars["dp"];
+            $("#rangeDepth").slider("value", url_vars["dp"]);
+        }
+        if(url_vars["mg"]) {
+            document.getElementById("maxMag").value = url_vars["mg"];
+            $("#rangeMag").slider("value", url_vars["mg"]);
+        }
+        if(url_vars["dv"]) {
+            document.getElementById("minDev").value = url_vars["dv"];
+            $("#rangeDev").slider("value", url_vars["dv"]);
+        }
+        if(url_vars["src"]) {
+            document.getElementById("sourceSelect").value = url_vars["src"];
+        }
+        if(url_vars["zm"]) {
+            map.setZoom(parseInt(url_vars["zm"]));      
+        }
+        if(url_vars["ll"]) {
+            var ll = url_vars["ll"].split(",");
+            map.panTo(new google.maps.LatLng(ll[0],ll[1]));
+        }*/
+	
+        //refresh all markers and whatnot
+        //refreshdata();
+         
+        //center view
+        var latlngbounds = new google.maps.LatLngBounds();
+        map.setCenter(latlngbounds.getCenter(markers));
+         
+        //make the table sortable
+        //if ($("#event_table").find("tr").size() > 1) {
+        //  $("#event_table").tablesorter();
+        //}
+    })
+    .error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";}); 
+    
+    //if close button is clicked
+    $('.window .close').click(function (e) {
+	//Cancel the link behavior
+	e.preventDefault();
+	$('#mask, .window').hide();
+    });     
+     
+    //if mask is clicked
+    $('#mask').click(function () {
+	$(this).hide();
+	$('.window').hide();
+    });
+    
+    console.log('ohai!');
 }
 
 //clears out all markers and info windows
@@ -288,13 +314,13 @@ function getUrlVars(url) {
     });
     return vars;
 }
-
+ 
 function getDateFromTime(time) {
   var dateObj = new Date(0);
   dateObj.setUTCMilliseconds(Date.parse(time));
   return dateObj;
 }
-
+ 
 function getDeviationFromDate(dateObj) {
   var deviation;
   
@@ -309,210 +335,175 @@ function getDeviationFromDate(dateObj) {
 
 //main "refresh" function that updates displayed data based on settings
 function refreshdata() {
-	var bounced;
-	var maxDepth;
-	var maxMag;
-	var minDev;
-	var deviation;
-	var visible = 0;
-	maxDepth = document.getElementById("maxDepth").value;
-	maxMag = document.getElementById("maxMag").value;
-	minDev = document.getElementById("minDev").value;
-	sourceLimit = document.getElementById("sourceSelect").value;
-	
-	// here we need to iterate through markers and get turn on ones in the
-	// view criteria
-	for (var i = 0; i < markers.length; i++) {
-	  bounced = false;
-	  
-	  if(maxDepth!="") { if(fmtDepth(markerInfo[i].depth)>maxDepth) bounced=true; };
-	  if(maxMag!="") { if(markerInfo[i].mag>maxMag) bounced=true; };
-
-	  dateObj = getDateFromTime(markerInfo[i].time)
-	  deviation = getDeviationFromDate(dateObj);
-
-	  if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
-	  if(minDev!="") { if(deviation>minDev) bounced = true; };
-	  
-	  if (bounced) {
-	    markers[i].setVisible(false);
-	    $("#event"+i).hide();
-	  } else {
-	    markers[i].setVisible(true);
-	    $("#event"+i).show();
-	    visible++;
-	  }
-	}
-	
-	//udpate the permalink
-	maxDepth = document.getElementById("maxDepth").value;
-	maxMag = document.getElementById("maxMag").value;
-	minDev = document.getElementById("minDev").value;
-	sourceLimit = document.getElementById("sourceSelect").value;
-	document.getElementById("permalink").innerHTML = "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'>permalink to settings</a> - <a href='#dialog' name='modal'>subscribe</a>";
-	
-	// Refresh subscription options
-	$( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));
-	$( "#maxMagSubscribe").text($( "#rangeMag" ).slider( "value" ));
-	$( "#hourDeviationSubscribe").text($( "#rangeDev" ).slider( "value" ));
-	$( "#sourceLimitSubscribe").text(sources[document.getElementById("sourceSelect").value])
-
-	//setup subscribe modal dialog - this is horribly inefficient
-	$('a[name=modal]').click(function(e) {
-	    //Cancel the link behavior
-	    e.preventDefault();
-	    //Get the A tag
-	    var id = $(this).attr('href');
-	 
-	    //Get the screen height and width
-	    var maskHeight = $(document).height();
-	    var maskWidth = $(window).width();
-	 
-	    //Set height and width to mask to fill up the whole screen
-	    $('#mask').css({'width':maskWidth,'height':maskHeight});
-	     
-	    //transition effect     
-	    $('#mask').fadeIn(1000);    
-	    $('#mask').fadeTo("slow",0.8);  
-	 
-	    //Get the window height and width
-	    var winH = $(window).height();
-	    var winW = $(window).width();
-		   
-	    //Set the popup window to center
-	    $(id).css('top',  winH/2-$(id).height()/2);
-	    $(id).css('left', winW/2-$(id).width()/2);
-	 
-	    //transition effect
-	    $(id).fadeIn(2000); 
-	 
-	});
-	
-	//if close button is clicked
-	$('.window .close').click(function (e) {
-		//Cancel the link behavior
-		e.preventDefault();
-		
-		$('#mask').hide();
-		$('.window').hide();
-	});		
-	
-	//if mask is clicked
-	$('#mask').click(function () {
-		$(this).hide();
-		$('.window').hide();
-	});			
-
-	$(window).resize(function () {
-	 
- 		var box = $('#boxes .window');
+    var bounced;
+    var maxDepth;
+    var maxMag;
+    var minDev;
+    var deviation;
+    var visible = 0;
+    maxDepth = document.getElementById("maxDepth").value;
+    maxMag = document.getElementById("maxMag").value;
+    minDev = document.getElementById("minDev").value;
+    sourceLimit = document.getElementById("sourceSelect").value;
+     
+    // here we need to iterate through markers and get turn on ones in the
+    // view criteria
+    for (var i = 0; i < markers.length; i++) {
+      bounced = false;
+       
+      if(maxDepth!="") { if(fmtDepth(markerInfo[i].depth)>maxDepth) bounced=true; };
+      if(maxMag!="") { if(markerInfo[i].mag>maxMag) bounced=true; };
  
+      dateObj = getDateFromTime(markerInfo[i].time)
+      deviation = getDeviationFromDate(dateObj);
+ 
+      if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
+      if(minDev!="") { if(deviation>minDev) bounced = true; };
+       
+      if (bounced) {
+        markers[i].setVisible(false);
+        $("#event"+i).hide();
+      } else {
+        markers[i].setVisible(true);
+        $("#event"+i).show();
+        visible++;
+      }
+    }
+     
+    //udpate the permalink
+    maxDepth = document.getElementById("maxDepth").value;
+    maxMag = document.getElementById("maxMag").value;
+    minDev = document.getElementById("minDev").value;
+    sourceLimit = document.getElementById("sourceSelect").value;
+    document.getElementById("permalink").innerHTML = "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'>permalink to settings</a> - <a href='#dialog' name='modal'>subscribe</a>";
+     
+    // Refresh subscription options
+    $( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));
+    $( "#maxMagSubscribe").text($( "#rangeMag" ).slider( "value" ));
+    $( "#hourDeviationSubscribe").text($( "#rangeDev" ).slider( "value" ));
+    $( "#sourceLimitSubscribe").text(sources[document.getElementById("sourceSelect").value])
+ 
+    //setup subscribe modal dialog - this is horribly inefficient
+    $('a[name=modal]').click(function(e) {
+        //Cancel the link behavior
+        e.preventDefault();
+        //Get the A tag
+        var id = $(this).attr('href');
+      
         //Get the screen height and width
         var maskHeight = $(document).height();
         var maskWidth = $(window).width();
       
         //Set height and width to mask to fill up the whole screen
         $('#mask').css({'width':maskWidth,'height':maskHeight});
-               
+          
+        //transition effect     
+        $('#mask').fadeIn(1000);    
+        $('#mask').fadeTo("slow",0.8);  
+      
         //Get the window height and width
         var winH = $(window).height();
         var winW = $(window).width();
-
+            
+        //Set the popup window to center
+        $(id).css('top',  winH/2-$(id).height()/2);
+        $(id).css('left', winW/2-$(id).width()/2);
+      
+        //transition effect
+        $(id).fadeIn(2000); 
+      
+    });
+     
+    //if close button is clicked
+    $('.window .close').click(function (e) {
+        //Cancel the link behavior
+        e.preventDefault();
+         
+        $('#mask').hide();
+        $('.window').hide();
+    });     
+     
+    //if mask is clicked
+    $('#mask').click(function () {
+        $(this).hide();
+        $('.window').hide();
+    });         
+ 
+    $(window).resize(function () {
+      
+        var box = $('#boxes .window');
+  
+        //Get the screen height and width
+        var maskHeight = $(document).height();
+        var maskWidth = $(window).width();
+       
+        //Set height and width to mask to fill up the whole screen
+        $('#mask').css({'width':maskWidth,'height':maskHeight});
+                
+        //Get the window height and width
+        var winH = $(window).height();
+        var winW = $(window).width();
+ 
         //Set the popup window to center
         box.css('top',  winH/2 - box.height()/2);
         box.css('left', winW/2 - box.width()/2);
-	 
-	});
-
-
-	//update the table output 
-	document.getElementById("status").innerHTML = visible+" events shown";
-	if($("#event_table").find("tr").size() > 1) {
-	  $("#event_table").tablesorter();
-	}
+      
+    });
+ 
+ 
+    //update the table output 
+    document.getElementById("status").innerHTML = visible+" events shown";
+    if($("#event_table").find("tr").size() > 1) {
+      $("#event_table").tablesorter();
+    }
 }
 
 //code that adds a marker to Google Maps
 function addMarker(lat,lng,d,size) {
-	var dateObj = new Date(0);
-	dateObj.setUTCMilliseconds(Date.parse(d.time));
-	
-	markers.push(new google.maps.Marker({
-	  position: new google.maps.LatLng(fmtLL(lat),fmtLL(lng)),
-	  visible: false,
-	  map: map,
-	  draggable: false,
-	  icon: t[parseInt(size)],
-	  title: dateObj.toGMTString() + ", depth: " + d.depth+", mag: "+ d.mag
-	}));
-
-	var lastmarker = markers[markers.length-1];
-
-	//if you click on the marker, you see the details
-	google.maps.event.addListener(lastmarker, "click", function() {
-		var detail = "";
-		detail+= "<span class='detailinfo'>Source:</span> <a href='http://" + d.source + d.url + "' target='_blank'>"+d.source+"</a><br>";
-		detail+= "<span class='detailinfo'>Lat/Lng:</span> <a href='http://maps.google.com/maps?t=h&q=loc:"+ fmtLL(d.latitude)+","+fmtLL(d.longitude)+"&z=8' target='_blank'>" + d.latitude + ", " + d.longitude+"</a><br>";
-		detail+= "<span class='detailinfo'>Date/time:</span> " + dateObj.toGMTString() + "<br>";
-		detail+=" <span class='detailinfo'>Deviation from hour: </span>";
-
-		if((60-dateObj.getMinutes())<dateObj.getMinutes()) {
-			detail+=(60-dateObj.getMinutes());
-		} else {
-			detail+=dateObj.getMinutes();
-		}
-		detail +=" minutes<br>";
-
-		detail+= "<span class='detailinfo'>Depth:</span> " + d.depth + "<br>";
-		detail+= "<span class='detailinfo'>Magnitude:</span> " + d.mag + "<br>";
-
-		
-		if(infowindow) infowindow.setMap(null);
-		infowindow = new google.maps.InfoWindow({
-			content: detail
-		});
-		infowindow.open(map,lastmarker);
-	});
-	//if you double-click, it centers and zooms in
-	google.maps.event.addListener(lastmarker, 'dblclick', function(e) {
-		map.setCenter(e.latLng);
-		map.setZoom(defZoomIn);
-	});
-}
-
-//these functions just parse some of the data. hopefully they won't be necessary in the future.
-function fmtMag(mag) {
-	if(mag.indexOf("Mj ")>-1) {
-		return parseFloat(mag.substr(3,mag.length));
-	} else {
-		return parseFloat(mag);
-	}
-}
-
-function fmtDepth(depth) {
-	if(depth=="shallow") {
-		return 0;
-	} else if(depth.indexOf(" km")>-1) {
-		return parseFloat(depth.substr(0,depth.length-3));
-	} else {
-		return parseFloat(depth);
-	}
-}
-
-function fmtLL(ll) {
-	if(ll.indexOf("E")>-1) {
-		ll = ll.substr(0,ll.indexOf("E")-1);
-	}
-	if(ll.indexOf("N")>-1) {
-		ll = ll.substr(0,ll.indexOf("N")-1);
-	}
-	if(ll.indexOf("S")>-1) {
-		ll = ll.substr(0,ll.indexOf("S")-1);
-	}
-	if(ll.indexOf("W")>-1) {
-		ll = ll.substr(0,ll.indexOf("W")-1);
-	}
-	return parseFloat(ll);
+    var dateObj = new Date(0);
+    dateObj.setUTCMilliseconds(Date.parse(d.time));
+     
+    markers.push(new google.maps.Marker({
+      position: new google.maps.LatLng(lat,lng),
+      visible: false,
+      map: map,
+      draggable: false,
+      icon: t[parseInt(size)],
+      title: dateObj.toGMTString() + ", depth: " + d.depth+", mag: "+ d.mag
+    }));
+  
+    var lastmarker = markers[markers.length-1];
+  
+    //if you click on the marker, you see the details
+    google.maps.event.addListener(lastmarker, "click", function() {
+        var detail = "";
+        detail+= "<span class='detailinfo'>Source:</span> <a href='http://" + d.source + d.url + "' target='_blank'>"+d.source+"</a><br>";
+        detail+= "<span class='detailinfo'>Lat/Lng:</span> <a href='http://maps.google.com/maps?t=h&q=loc:"+ d.latitude +","+d.longitude+"&z=8' target='_blank'>" + d.latitude + ", " + d.longitude+"</a><br>";
+        detail+= "<span class='detailinfo'>Date/time:</span> " + dateObj.toGMTString() + "<br>";
+        detail+=" <span class='detailinfo'>Deviation from hour: </span>";
+  
+        if((60-dateObj.getMinutes())<dateObj.getMinutes()) {
+            detail+=(60-dateObj.getMinutes());
+        } else {
+            detail+=dateObj.getMinutes();
+        }
+        detail +=" minutes<br>";
+  
+        detail+= "<span class='detailinfo'>Depth:</span> " + d.depth + "<br>";
+        detail+= "<span class='detailinfo'>Magnitude:</span> " + d.mag + "<br>";
+  
+         
+        if(infowindow) infowindow.setMap(null);
+        infowindow = new google.maps.InfoWindow({
+            content: detail
+        });
+        infowindow.open(map,lastmarker);
+    });
+    //if you double-click, it centers and zooms in
+    google.maps.event.addListener(lastmarker, 'dblclick', function(e) {
+        map.setCenter(e.latLng);
+        map.setZoom(defZoomIn);
+    });
 }
 
 //popups up a little information window for a given marker. will zoom in if told to.
@@ -525,17 +516,17 @@ function getinfo(markerID, zoom) {
 		detail+= "<span class='detailinfo'>Lat/Lng:</span> <a href='http://maps.google.com/maps?t=h&q=loc:"+ d.latitude+","+d.longitude+"&z=8' target='_blank'>" + d.latitude + ", " + d.longitude+"</a><br>";
 		detail+= "<span class='detailinfo'>Date/time:</span> " + dateObj.toGMTString() + "<br>";
 		detail+=" <span class='detailinfo'>Deviation from hour: </span>";
-
+ 
 		if((60-dateObj.getMinutes())<dateObj.getMinutes()) {
 			detail+=(60-dateObj.getMinutes());
 		} else {
 			detail+=dateObj.getMinutes();
 		}
 		detail +=" minutes<br>";
-
+ 
 		detail+= "<span class='detailinfo'>Depth:</span> " + d.depth + "<br>";
 		detail+= "<span class='detailinfo'>Magnitude:</span> " + d.mag + "<br>";
-
+ 
 		if(infowindow) infowindow.setMap(null);
 		infowindow = new google.maps.InfoWindow({
 			content: detail
@@ -546,7 +537,7 @@ function getinfo(markerID, zoom) {
 			map.setZoom(defZoomIn);
 		}
 }
-
+ 
 function verifyEmail() {
   var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   
@@ -559,115 +550,8 @@ function verifyEmail() {
   }
 }
 
-function subscribe() {
-  // If it's not verified, we can return, as verifyEmail notifies the user in
-  // the UI
-  if (verifyEmail()) {
-    $(':submit').attr('disabled', 'disabled');
-    $('input[name=email]').attr('readonly', 'readonly');
-     
-    var http = new XMLHttpRequest();
-    var url = "<%= url('/subscribe') %>";
-    var params = "email=" + $('input[name=email]').val() +
-		 "&depth=" + $('dd[id=maxDepthSubscribe]').text() +
-		 "&mag=" + $('dd[id=maxMagSubscribe]').text() +
-		 "&deviation=" + $('dd[id=hourDeviationSubscribe]').text() +
-		 "&source=" + sources[$('dd[id=sourceLimitSubscribe]').text()] +
-		 "&digest=" + ($('input[name=digest]')=='true'?'true':'false')
-    
-    http.open("POST", url, true);
-    
-    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    http.onreadystatechange = function() {//Call a function when the state changes.
-      if(http.readyState == 4 && http.status == 200) {
-	if (http.responseText == "SUBSCRIPTION ADDED" || http.responseText == "SUBSCRIPTION UPDATED") {
-	  // subscription accepted
-	  $('div[id=subscriptionResult]').html('<h4 class="success">Subscription successfully added.</h4>');
-	  
-	  setTimeout(function() {
-	    $('#mask').fadeOut(1700);
-	    $('.window').fadeOut(1700);
-	    $('div[id=subscriptionResult]').html('');
-	  },1500);
-	} else {
-	  $('div[id=subscriptionResult]').html('<h4 class="error">' + http.responseText + '</h4>')
-	}
-	
-	$(':submit').removeAttr('disabled');
-	$('input[name=email]').removeAttr('readonly');
-	
-      }
-    }
-    http.send(params);
-  }
-}
-
 document.body.onload = init;
 
 </script>
 
-<table id="tableholder">
-<tr>
-<td id="mapcell">
 <div id="theMap"></div>
-</td>
-<td id="sidecell">
-<div id="status"></div>
-<div id="permalink"></div><br />
-<div id="events"></div>
-<div id="constrainer">
-Max Depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/> <div id="rangeDepth"></div><br/>
-Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
-Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
-Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
-</div>
-<div id="debug"></div>
-<div id="list"></div>
-</td>
-</tr>
-</table>
-
-<div id="boxes">
-    <div id="dialog" class="window">
-	<b>subscribe</b> | 
-	<a href="#" class="close">close</a>
-	receive email alerts when new events match your current settings
-	<br />
-	<br />
-	<p>
-	Current Settings:
-	</p>
-	<div id="subscriptionSettings">
-	  <dl class="dl-horizontal">
-	    <div class="row">
-	      <dt>Max Depth:</dt>
-	      <dd id="maxDepthSubscribe"></dd>
-	    </div>
-	    <div class="row">
-	      <dt>Max Magnitude:</dt>
-	      <dd id="maxMagSubscribe"></dd>
-	    </div>
-	    <div class="row">
-	      <dt>Deviation from Hour:</dt>
-	      <dd id="hourDeviationSubscribe"></dd>
-	    </div>
-	    <div class="row">
-	      <dt>Limit to Source:</dt>
-	      <dd id="sourceLimitSubscribe"></dd>
-	    </div>
-	  </dl>
-	</div>
-	<div id="subscriptionButton">
-	  <button type="submit" class="btn" onclick="subscribe()">Subscribe</button>
-	  <input name="email" onchange="verifyEmail()" type="text" placeholder="your@email.com…" />
-	  <span id="emailOK"></span>
-	  <br />
-	  <input type="checkbox" name="digest" value="true" checked="yes" /> <small>daily digest: uncheck to receive email alerts as soon as we receive data</small> 
-	</div>
-	<div id="subscriptionResult">
-	</div>
-    </div>
-    <div id="mask"></div>
-</div>
-

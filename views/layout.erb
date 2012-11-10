@@ -18,42 +18,6 @@
     
   </head>
   <body>
-    <div class="container">
-      <header>
-        <div class="row">
-          &nbsp;
-        </div>
-        <div class="hero-unit">
-          <div id="release" class="shadow">
-            <h5>BETA</h5>
-          </div>
-          <div class="row">
-            <div class="span14">
-             <h1><%= link(url('/'), 'Sleuthing from the Internet') %></h1>
-             <p>aggregating seismic data so you don't have to</p>
-            </div>
-          </div>
-        </div>
-      </header>
-      <div class="row">
-        <%= yield %>
-      </div>
-      <div class="row">
-        &nbsp;
-      </div>
-      <footer>
-        <div class="row">
-            <div class="span6 offset7" align="right">
-                written by: Jim Kelly and Alex Wellerstein<br>
-                inspired by: <a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">The Arms Control Wonk, Jeffrey Lewis</a><br>
-                source: <a href="https://github.com/jimjkelly/SleuthingFromTheInternet">GitHub</a><br>
-                powered by: <a href="http://heroku.com">Heroku</a></br>
-            </div>
-        </div>
-        <div class="row">
-          &nbsp;
-        </div>
-      </footer>
-    </div>
+    <%= yield %>
   </body>
 </html>

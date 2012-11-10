@@ -1,5 +1,20 @@
-          <div class="span12 offset1">
-                <p>Sleuthing from the Internet seeks to make the job of monitoring seismic data to detect things that go boom much easier.  Below is a list of the 500 most recent events (view <a href="<%= url('/events') %>">see all</a>).  Use the sliders to change view criteria, and hit subscribe to receive notifications about new events that occur matching your selected criteria.</p>
-                <br>
-                <%= erb :'partials/map_interface' %>
-          </div>
+<%= erb :'partials/map_interface' %>
+
+<header class="shadow">
+        <h1><%= link(url('/'), 'Sleuthing from the Internet') %></h1>
+        <p>aggregating seismic data so you don't have to</p>
+        <div id="release" class="shadow">BETA</div>
+</header>
+
+<div id="about" class="panel">
+</div>
+
+<div id="events" class="panel">
+</div>
+
+<div id="control" class="panel">
+</div>
+
+        <a class="abouttrigger" href="#">about</a>
+        <a class="eventstrigger" href="#">events</a>
+        <a class="controltrigger" href="#">control</a>
