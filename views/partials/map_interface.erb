@@ -81,6 +81,21 @@ var GmapGrayStyle = [
   }
 ];
 
+function ready() {
+  $("#about").hide()
+  $("#control").hide()
+  $("#showAbout").click(function () {
+    var ourDiv = $('#about');
+    var ourTrigger = $('#aboutCaret');
+    ourDiv.slideToggle("fast");
+    if (ourTrigger.hasClass('rotate')) {
+      ourTrigger.removeClass('rotate')
+    } else {
+      ourTrigger.addClass('rotate')
+    }
+  });
+}
+
 //Basic initialization function that runs after load of body element
 function init() {
 	var deviation;
@@ -131,7 +146,7 @@ function init() {
 	  window.addEventListener("load",
 				  function() {this.map.onResize()}, false);
 	}
-	
+	clearmarkers();
 	google.maps.event.addListenerOnce(map, 'idle', function(){
 	  var copyrightAttr = $('#theMap div div[style*="z-index: 1000001;"]');
 	  //copyrightAttr.css('bottom', copyrightAttr.height());
@@ -146,137 +161,134 @@ function init() {
 	  var controlHeight = googleAttr.height() + copyrightAttr.height();
 	  
 	  var controls = $('#theMap div div div[style^="cursor"]').parent();
-	  //controls.css('top', controlHeight);
 	  controls.attr('id', 'controls');
-	});
-	
-	//get the data	
-	$.getJSON(json_src, function(data) {
-		sources[0] = "N/A";
-		clearmarkers();
-		//process it once we have it
-		$.each(data, function(key, val) {
-		      if(val.events.mag>dataMaxMag) dataMaxMag = val.events.mag;
-		      if(val.events.depth>dataMaxDepth) dataMaxDepth = val.events.depth;
-		      if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source);
-		      
-		      // add markers
-		      dateObj = getDateFromTime(val.events.time);
-		      deviation = getDeviationFromDate(dateObj);
-		      
-		      addMarker(val.events.latitude,val.events.longitude, val.events, markerSize);
-		      markerInfo.push(val.events);
-		      
-		      list+="<tr id=\"event" + key + "\">";
-		      list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
-		      list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<9?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
-		      list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
-		      list+="<td>"+val.events.depth+"</td>";		
-		      list+="<td>"+val.events.mag+"</td>";
-		      list+="<td>"+deviation+"</td>";
-		      list+="<td><a title='Open a new window with Google Maps zoomed in on the location of this event'  href='http://maps.google.com/maps?t=h&q=loc:"+ val.events.latitude+","+val.events.longitude+"&z=8' target='_blank'><img src='lib/external-ltr.png'/></a></td>";
-		      list+="</tr>";
-		      
-		      count++;
-		});
-	
-        // Add all elements to the table
-        /*document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
-  
-        //update the UI elements, including sliders
-        document.getElementById("maxDepth").value = dataMaxDepth;
-        document.getElementById("maxMag").value = dataMaxMag;
-  
-        $( "#rangeMag" ).slider({
-            range: "min",
-            value: dataMaxMag,
-            min: 0,
-            max: dataMaxMag,
-            step: .1,
-            slide: function( event, ui ) {
-                $( "#maxMag" ).val(ui.value );
-                el = document.getElementById('maxMag');
-                ev = document.createEvent('Event');
-                ev.initEvent('change', true, false);
-                el.dispatchEvent(ev);
-            }
-        });
-        $( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
-         
-        $( "#rangeDepth" ).slider({
-            range: "min",
-            value: dataMaxDepth,
-            min: 0,
-            max: dataMaxDepth,
-            step: .01,
-            slide: function( event, ui ) {
-                $( "#maxDepth" ).val(ui.value );
-                el = document.getElementById('maxDepth');
-                ev = document.createEvent('Event');
-                ev.initEvent('change', true, false);
-                el.dispatchEvent(ev);
-            }
-        });
-        $( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
-  
-        $( "#rangeDev" ).slider({
-            range: "min",
-            value: dataMaxDepth,
-            min: 0,
-            max: 30,
-            step: 1,
-            slide: function( event, ui ) {
-                $( "#minDev" ).val(ui.value );
-                el = document.getElementById('maxDepth');
-                ev = document.createEvent('Event');
-                ev.initEvent('change', true, false);
-                el.dispatchEvent(ev);
-            }
-        });
-        $("#minDev" ).val($( "#rangeDev" ).slider( "value" ) );
-  
-        for(var i in sources) {
-            document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
-        }
-  
-        //if we have URL variables, then update UI based on them
-        url_vars = getUrlVars();
-        if(url_vars["dp"]) {
-            document.getElementById("maxDepth").value = url_vars["dp"];
-            $("#rangeDepth").slider("value", url_vars["dp"]);
-        }
-        if(url_vars["mg"]) {
-            document.getElementById("maxMag").value = url_vars["mg"];
-            $("#rangeMag").slider("value", url_vars["mg"]);
-        }
-        if(url_vars["dv"]) {
-            document.getElementById("minDev").value = url_vars["dv"];
-            $("#rangeDev").slider("value", url_vars["dv"]);
-        }
-        if(url_vars["src"]) {
-            document.getElementById("sourceSelect").value = url_vars["src"];
-        }
-        if(url_vars["zm"]) {
-            map.setZoom(parseInt(url_vars["zm"]));      
-        }
-        if(url_vars["ll"]) {
-            var ll = url_vars["ll"].split(",");
-            map.panTo(new google.maps.LatLng(ll[0],ll[1]));
-        }*/
-	
-        //refresh all markers and whatnot
-        //refreshdata();
+	  
+	  //get the data	
+	  $.getJSON(json_src, function(data) {
+	    sources[0] = "N/A";
+	    //process it once we have it
+	    $.each(data, function(key, val) {
+	      if(val.events.mag>dataMaxMag) dataMaxMag = val.events.mag;
+	      if(val.events.depth>dataMaxDepth) dataMaxDepth = val.events.depth;
+	      if(jQuery.inArray(val.events.source, sources)<0) sources.push(val.events.source);
+	      
+	      // add markers
+	      dateObj = getDateFromTime(val.events.time);
+	      deviation = getDeviationFromDate(dateObj);
+		  
+	      addMarker(val.events.latitude,val.events.longitude, val.events, markerSize);
+	      markerInfo.push(val.events);
+		  
+	      list+="<tr id=\"event" + key + "\">";
+	      list+="<td><a href='#' title='Show details of event' onclick='getinfo("+(markers.length-1)+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+(markers.length-1)+",true);return false;'>&#8857;</a></td>";
+	      list+="<td>"+dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<9?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate())+"</td>"
+	      list+="<td><a title='Click to see original event information from source' href='http://"+val.events.source + val.events.url + "' target='_blank'>"+val.events.source.replace("earthquake.","").replace("www.","")+"</a></td>";
+	      list+="<td>"+val.events.depth+"</td>";		
+	      list+="<td>"+val.events.mag+"</td>";
+	      list+="<td>"+deviation+"</td>";
+	      list+="<td><a title='Open a new window with Google Maps zoomed in on the location of this event'  href='http://maps.google.com/maps?t=h&q=loc:"+ val.events.latitude+","+val.events.longitude+"&z=8' target='_blank'><img src='lib/external-ltr.png'/></a></td>";
+	      list+="</tr>";
+
+	      count++;
+	    });
+    
+	    // Add all elements to the table
+	    /*document.getElementById("list").innerHTML = "<table id='event_table' class='tablesorter'><thead><tr><th></th><th>Date</th><th>Source</th><th>Depth</th><th>Mag</th><th>Dev</th><th>Loc</th></thead>"+list+"</table>";
+	    */
+	    //update the UI elements, including sliders
+	    document.getElementById("maxDepth").value = dataMaxDepth;
+	    document.getElementById("maxMag").value = dataMaxMag;
+      
+	    $( "#rangeMag" ).slider({
+		range: "min",
+		value: dataMaxMag,
+		min: 0,
+		max: dataMaxMag,
+		step: .1,
+		slide: function( event, ui ) {
+		    $( "#maxMag" ).val(ui.value );
+		    el = document.getElementById('maxMag');
+		    ev = document.createEvent('Event');
+		    ev.initEvent('change', true, false);
+		    el.dispatchEvent(ev);
+		}
+	    });
+	    $( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
+	     
+	    $( "#rangeDepth" ).slider({
+		range: "min",
+		value: dataMaxDepth,
+		min: 0,
+		max: dataMaxDepth,
+		step: .01,
+		slide: function( event, ui ) {
+		    $( "#maxDepth" ).val(ui.value );
+		    el = document.getElementById('maxDepth');
+		    ev = document.createEvent('Event');
+		    ev.initEvent('change', true, false);
+		    el.dispatchEvent(ev);
+		}
+	    });
+	    $( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
+      
+	    $( "#rangeDev" ).slider({
+		range: "min",
+		value: dataMaxDepth,
+		min: 0,
+		max: 30,
+		step: 1,
+		slide: function( event, ui ) {
+		    $( "#minDev" ).val(ui.value );
+		    el = document.getElementById('maxDepth');
+		    ev = document.createEvent('Event');
+		    ev.initEvent('change', true, false);
+		    el.dispatchEvent(ev);
+		}
+	    });
+	    $("#minDev" ).val($( "#rangeDev" ).slider( "value" ) );
+      
+	    for(var i in sources) {
+		document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
+	    }
+      
+	    //if we have URL variables, then update UI based on them
+	    url_vars = getUrlVars();
+	    if(url_vars["dp"]) {
+		document.getElementById("maxDepth").value = url_vars["dp"];
+		$("#rangeDepth").slider("value", url_vars["dp"]);
+	    }
+	    if(url_vars["mg"]) {
+		document.getElementById("maxMag").value = url_vars["mg"];
+		$("#rangeMag").slider("value", url_vars["mg"]);
+	    }
+	    if(url_vars["dv"]) {
+		document.getElementById("minDev").value = url_vars["dv"];
+		$("#rangeDev").slider("value", url_vars["dv"]);
+	    }
+	    if(url_vars["src"]) {
+		document.getElementById("sourceSelect").value = url_vars["src"];
+	    }
+	    if(url_vars["zm"]) {
+		map.setZoom(parseInt(url_vars["zm"]));      
+	    }
+	    if(url_vars["ll"]) {
+		var ll = url_vars["ll"].split(",");
+		map.panTo(new google.maps.LatLng(ll[0],ll[1]));
+	    }
+	    
+	    refreshdata();
+	  }).error(function(jqXHR, textStatus, errorThrown) { document.getElementById("events").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});
+	})
+        
          
         //center view
-        var latlngbounds = new google.maps.LatLngBounds();
-        map.setCenter(latlngbounds.getCenter(markers));
+        //var latlngbounds = new google.maps.LatLngBounds();
+        //map.setCenter(latlngbounds.getCenter(markers));
          
         //make the table sortable
         //if ($("#event_table").find("tr").size() > 1) {
         //  $("#event_table").tablesorter();
         //}
-    })
-    .error(function(jqXHR, textStatus, errorThrown) { document.getElementById("status").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";}); 
     
     //if close button is clicked
     $('.window .close').click(function (e) {
@@ -349,7 +361,7 @@ function refreshdata() {
     for (var i = 0; i < markers.length; i++) {
       bounced = false;
        
-      if(maxDepth!="") { if(fmtDepth(markerInfo[i].depth)>maxDepth) bounced=true; };
+      if(maxDepth!="") { if(markerInfo[i].depth>maxDepth) bounced=true; };
       if(maxMag!="") { if(markerInfo[i].mag>maxMag) bounced=true; };
  
       dateObj = getDateFromTime(markerInfo[i].time)
@@ -357,7 +369,7 @@ function refreshdata() {
  
       if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
       if(minDev!="") { if(deviation>minDev) bounced = true; };
-       
+      
       if (bounced) {
         markers[i].setVisible(false);
         $("#event"+i).hide();
@@ -367,7 +379,7 @@ function refreshdata() {
         visible++;
       }
     }
-     
+    
     //udpate the permalink
     maxDepth = document.getElementById("maxDepth").value;
     maxMag = document.getElementById("maxMag").value;
@@ -450,7 +462,7 @@ function refreshdata() {
  
  
     //update the table output 
-    document.getElementById("status").innerHTML = visible+" events shown";
+    document.getElementById("events").innerHTML = visible+" events shown <a class='eventstrigger' href='#'>>></a>";
     if($("#event_table").find("tr").size() > 1) {
       $("#event_table").tablesorter();
     }
@@ -460,7 +472,7 @@ function refreshdata() {
 function addMarker(lat,lng,d,size) {
     var dateObj = new Date(0);
     dateObj.setUTCMilliseconds(Date.parse(d.time));
-     
+    
     markers.push(new google.maps.Marker({
       position: new google.maps.LatLng(lat,lng),
       visible: false,
@@ -549,6 +561,7 @@ function verifyEmail() {
 }
 
 document.body.onload = init;
+$(document).ready(ready);
 
 </script>
 

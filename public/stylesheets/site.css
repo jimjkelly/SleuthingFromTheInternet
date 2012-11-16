@@ -12,6 +12,14 @@ body {
     display: block;
 }
 
+a:hover {
+    text-decoration: none;
+}
+
+a {
+    color:#005580;
+}
+
 header {
     position: absolute; top: 0px; left: 0px; z-index: 99;
     padding-left: 30px;
@@ -23,6 +31,7 @@ header {
     /*background-color: #EEE;*/
     -moz-border-radius-bottomright:15px;
     border-bottom-right-radius: 15px;
+    z-index: 1000;
 }
 
 header h1 {
@@ -31,16 +40,9 @@ header h1 {
     letter-spacing: -1px;
 }
 
-header a:hover {
-    text-decoration: none;
-}
-
-header a {
-    color:#005580;
-}
-
 header p {
     text-align: right;
+    float:right;
 }
 
 #release {
@@ -76,27 +78,18 @@ Super-hacky, but hey.
 }
 
 .shadow {
+    z-index: 999;
     -webkit-box-shadow: -3px 3px 5px black;
     -moz-box-shadow: -3px 3px 5px black;
          box-shadow: -3px 3px 5px black;
 }
 
-.panel {
-    position: absolute;
-    top: 50px;
-    left: 0;
-    display: none;
-    background: #000000;
-    border:1px solid #111111;
-    -moz-border-radius-topright: 20px;
-    -webkit-border-top-right-radius: 20px;
-    -moz-border-radius-bottomright: 20px;
-    -webkit-border-bottom-right-radius: 20px;
-    width: 330px;
-    height: auto;
-    padding: 30px 30px 30px 130px;
-    filter: alpha(opacity=85);
-    opacity: .85;
+.rotate {
+  -webkit-transform:rotate(180deg);
+  -moz-transform:rotate(180deg);
+  -o-transform:rotate(180deg);
+  /* filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=1.5); */
+  -ms-transform:rotate(180deg);        
 }
 
 #theMap {
@@ -109,6 +102,50 @@ Super-hacky, but hey.
 #theMap img {
     max-width:none;
 }
+
+.panel {
+    position: absolute;
+    background: silver;
+    padding: 30px;
+    padding-bottom: 15px;
+}
+
+#about {
+    -moz-border-radius-bottomright:15px;
+    border-bottom-right-radius: 15px;
+    position: absolute;
+    background: silver;
+    z-index: 100;
+    left: 0;
+    top: 90px;
+}
+
+#events {
+   bottom: 0px;
+   left: 0px;
+    -moz-border-radius-topright:15px;
+    border-top-right-radius: 15px;
+}
+
+#control {
+    bottom: 0px;
+    right: 0px;
+    -moz-border-radius-topleft:15px;
+    border-top-left-radius: 15px;
+}
+
+#acw {
+    position: absolute;
+    padding-left: 25px;
+    display: none;
+}
+
+#attribution {
+}
+
+
+
+
 
 #status a {
     text-decoration: none;

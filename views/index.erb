@@ -3,18 +3,38 @@
 <header class="shadow">
         <h1><%= link(url('/'), 'Sleuthing from the Internet') %></h1>
         <p>aggregating seismic data so you don't have to</p>
+        <a id="showAbout" href="#">&nbsp;<i class="icon-info-sign icon-white"></i> About <i id="aboutCaret" class="icon-caret-up icon-white"></i></a>
         <div id="release" class="shadow">BETA</div>
 </header>
-
-<div id="about" class="panel">
+<div id="about" class="shadow panel">
+        <p>
+                Sleuthing from the Internet monitors the seismic data generated
+                by regional networks around the world,<br />
+                allowing you to specify criteria of interest and be notified of events
+                immediately.  Please feel free to click<br />
+                the <i class="icon-cog"></i> below to change the settings, and
+                click subscribe to sign up or modify your notifications.
+        </p>
+        <p>
+                inspired by: The Arms Control Wonk, Jeffrey Lewis's <a href="https://twitter.com/ArmsControlWonk"><i class="icon-twitter"></i></a> post, <b><a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">My Own Sleuthing From Home</a></b><br />
+                writen by: Alex Wellerstein <a href="http://twitter.com/wellerstein"><i class="icon-twitter"></i></a> and Jim Kelly <a href="http://twitter.com/pthread"><i class="icon-twitter"></i></a><br />
+                source: GitHub <a href="https://github.com/jimjkelly/SleuthingFromTheInternet"><i class="icon-github"></i></a><br />
+                powered by: Heroku <a href="http://www.heroku.com"><i class="icon-cloud"></i></a>
+        </p>
 </div>
 
-<div id="events" class="panel">
+<div id="events">
+        <img onClick="showEvents(); return false;" src="" />
 </div>
 
-<div id="control" class="panel">
+<div id="control" class="panel shadow">
+        Max Depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/> <div id="rangeDepth"></div><br/>
+        Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
+        Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
+        Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
+        <div id="permalink">
+        </div>
 </div>
 
-        <a class="abouttrigger" href="#">about</a>
-        <a class="eventstrigger" href="#">events</a>
-        <a class="controltrigger" href="#">control</a>
+<a class="abouttrigger" href="#">about</a>
+<a class="controltrigger" href="#">control</a>
