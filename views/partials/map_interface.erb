@@ -94,6 +94,9 @@ function ready() {
       ourTrigger.addClass('rotate')
     }
   });
+  $("#showControl").click(function() {
+    $("#control").slideToggle("fast");
+  });
 }
 
 //Basic initialization function that runs after load of body element
@@ -213,9 +216,10 @@ function init() {
 		    el.dispatchEvent(ev);
 		}
 	    });
-	    $( "#maxMag" ).val($( "#rangeMag" ).slider( "value" ) );
+	    $("#maxMag").val($("#rangeMag").slider("value"));
+	    $("#maxMagLabel").html($("#rangeMag").slider("value"));
 	     
-	    $( "#rangeDepth" ).slider({
+	    $("#rangeDepth").slider({
 		range: "min",
 		value: dataMaxDepth,
 		min: 0,
@@ -229,23 +233,25 @@ function init() {
 		    el.dispatchEvent(ev);
 		}
 	    });
-	    $( "#maxDepth" ).val($( "#rangeDepth" ).slider( "value" ) );
+	    $("#maxDepth").val($("#rangeDepth").slider("value"));
+	    $("#maxDepthLabel").html($("#rangeDepth").slider("value"));
       
-	    $( "#rangeDev" ).slider({
+	    $("#rangeDev").slider({
 		range: "min",
 		value: dataMaxDepth,
 		min: 0,
 		max: 30,
 		step: 1,
 		slide: function( event, ui ) {
-		    $( "#minDev" ).val(ui.value );
-		    el = document.getElementById('maxDepth');
+		    $("#minDev").val(ui.value );
+		    el = document.getElementById('minDev');
 		    ev = document.createEvent('Event');
 		    ev.initEvent('change', true, false);
 		    el.dispatchEvent(ev);
 		}
 	    });
-	    $("#minDev" ).val($( "#rangeDev" ).slider( "value" ) );
+	    $("#minDev" ).val($("#rangeDev").slider("value"));
+	    $("#minDevLabel").html($("#rangeDev").slider("value"));
       
 	    for(var i in sources) {
 		document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
@@ -462,7 +468,7 @@ function refreshdata() {
  
  
     //update the table output 
-    document.getElementById("events").innerHTML = visible+" events shown <a class='eventstrigger' href='#'>>></a>";
+    document.getElementById("eventsNum").innerHTML = visible+" events";
     if($("#event_table").find("tr").size() > 1) {
       $("#event_table").tablesorter();
     }

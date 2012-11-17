@@ -23,14 +23,14 @@
         </p>
 </div>
 
-<div id="events">
-        <img onClick="showEvents(); return false;" src="" />
+<div id="events" class="shadow panel">
+        <p><span id="eventsNum"></span> <a href="#" id="showEvents"><i class="icon-rss"></i></a> | <span id="maxDepthLabel"></span> km /  <span id="maxMagLabel"></span> Mag. /  <span id="minDevLabel"></span> min. dev. from hour <a href="#" id="showControl"><i class="icon-cog"></i></a></p>
 </div>
 
 <div id="control" class="panel shadow">
-        Max Depth: <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/> <div id="rangeDepth"></div><br/>
-        Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/> <div id="rangeMag"></div><br/>
-        Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /> <div id="rangeDev"></div><br/>
+        Max Depth:  <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/><div id="rangeDepth"></div><br/>
+        Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/><div id="rangeMag"></div> <br/>
+        Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /><div id="rangeDev"></div> <br/>
         Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
         <div id="permalink">
         </div>
