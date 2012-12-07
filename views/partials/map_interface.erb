@@ -119,7 +119,6 @@ function ready() {
 		//$("#events-area").width(150 * markerInfo.length);
 		// We only load up initial values if we haven't done so before
 		if ($("#events-area").html() == "&nbsp;") {
-			console.log($("#events-area").width())
 			var visibleEvents = Math.floor($("#events-area").width() / 150);
 			$("#events-area").html("")
 			$("#events-area").height(150)
@@ -127,7 +126,6 @@ function ready() {
 		  		$("#events-area").append(loadeventview(e, markerInfo[e]));
 			}
 		}
-		console.log('initial position: ' + $('.events:first').position()['left'])
 	});
   	
 	$("#events-arrow-left").hover(function(){
@@ -152,21 +150,22 @@ function oppositeDirection(direction) {
 	}
 }
 
+// Generic scrolling function, handles either left or right direction at given speed.
 function scrollEvents(direction, speed) {
 	// first set things based on direction
 	if (direction == 'left') {
-		var toRemove = 'first'
-		var toAdd = 'last'
+		var leading = 'first'
+		var trailing = 'last'
+		var move = '-='
 	} else if (direction == 'right') {
-		var toRemove = 'last'
-		var toAdd = 'first'
+		var leading = 'last'
+		var trailing = 'first'
+		var move = '+='
 	} else {
 		throw 'direction must either be left or right, you gave '.direction
 	}
 
 	var opposite = oppositeDirection(direction)
-
-	//if ($('.events:' + toRemove))
 
 	// check if item needs to be removed/added
 	//if ($('.events:' + toRemove).position()[direction] < 100) {
@@ -174,18 +173,26 @@ function scrollEvents(direction, speed) {
 	//		$('.events:' + toRemove).remove()
 	//	})
 	//}
-	console.log('moving position: ' + $('.events:first').position()['left'])
-	$('.events:' + toRemove).filter(':not(:animated)').animate({
-		opposite: '+=150px'
+	$('.events').filter(':not(:animated)').animate({
+		'left': move + '150px'
 	}, {
 		duration: speed,
-		step: function( now, fx ){
-	  		$( ".events" ).css(oppositeDirection(direction), now);
-		},
 		complete: function() {
 			scrollEvents(direction, speed)
-		}
-	});
+		},
+	})
+	/*
+	console.log($('.events:first').position()['left'])
+	if ($('.events:first').position()['left'] <= 0) {
+		console.log('ohai')
+		$('.events').stop('scrolling', true)
+		$('.events').filter(':not(:animated)').animate({
+			'left': '0'
+		}, {
+			duration: speed,
+			queue: 'edgecorrect'
+		})
+	}*/
 }
 
 //Basic initialization function that runs after load of body element
