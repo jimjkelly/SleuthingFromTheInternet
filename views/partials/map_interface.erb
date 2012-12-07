@@ -7,6 +7,7 @@ Version 0.5 - 8/13/2012
 
 /* TODO: 
 - DRY out some of the event size coordinates (can this be coordinated with CSS via LESS, etc?)
+- Factor checkBounds
 */
 
 /* Things you might want to change */
@@ -132,11 +133,13 @@ function ready() {
 		scrollEvents('left', 1000)
 	}, function() {
 		$('.events').stop()
+		checkBounds('left', 1000)
 	});
 	$("#events-arrow-right").hover(function(){
 		scrollEvents('right', 1000)
 	}, function() {
 		$('.events').stop()
+		checkBounds('right', 1000)
 	});
 }
 
@@ -180,19 +183,30 @@ function scrollEvents(direction, speed) {
 		complete: function() {
 			scrollEvents(direction, speed)
 		},
+		queue: false
 	})
-	/*
+	checkBounds(direction, speed)
+}
+
+function checkBounds(direction, speed) {
 	console.log($('.events:first').position()['left'])
-	if ($('.events:first').position()['left'] <= 0) {
-		console.log('ohai')
-		$('.events').stop('scrolling', true)
+	if ($('.events:first').position()['left'] <= 0 && direction =='left') {
+		$('.events').stop()
 		$('.events').filter(':not(:animated)').animate({
 			'left': '0'
 		}, {
 			duration: speed,
-			queue: 'edgecorrect'
+			queue: false
 		})
-	}*/
+	} else if (($('.events:last').position()['left'] >= ($('#events-area').width() - 150)) && direction == 'right') {
+		$('.events').stop()
+		$('.events').filter(':not(:animated)').animate({
+			'right': ($('#events-area').width() - 300)
+		}, {
+			duration: speed,
+			queue: false
+		})
+	}
 }
 
 //Basic initialization function that runs after load of body element
