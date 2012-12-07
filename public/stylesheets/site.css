@@ -21,7 +21,9 @@ a {
 }
 
 header {
-    position: absolute; top: 0px; left: 0px; z-index: 99;
+    position: absolute; 
+    top: 0; 
+    left: 0; 
     padding-left: 30px;
     padding-right:160px;
     padding-top: 10px;
@@ -35,7 +37,7 @@ header {
 }
 
 header h1 {
-    margin: 0px;
+    margin: 0;
     font-size: 52px;
     letter-spacing: -1px;
 }
@@ -84,6 +86,10 @@ Super-hacky, but hey.
          box-shadow: -3px 3px 5px black;
 }
 
+.transparent {
+    background: rgba(0,0,0,0.0);
+}
+
 .rotate {
   -webkit-transform:rotate(180deg);
   -moz-transform:rotate(180deg);
@@ -120,32 +126,75 @@ Super-hacky, but hey.
     top: 90px;
 }
 
-#events {
-   bottom: 0px;
-   left: 0px;
+#summary {
+   bottom: 0;
+   left: 0;
     -moz-border-radius-topright:15px;
     border-top-right-radius: 15px;
 }
 
+#summary p {
+    margin: 0;
+    padding: 0;
+}
+
 #control {
-    bottom: 0px;
-    right: 0px;
+    bottom: 0;
+    right: 0;
     -moz-border-radius-topleft:15px;
     border-top-left-radius: 15px;
 }
 
-#acw {
+#events {
+    bottom:0;
+    left: 0;
     position: absolute;
-    padding-left: 25px;
-    display: none;
+    width: 80%;
+    height: 150px;
+    -moz-border-radius-topright:15px;
+    border-top-right-radius: 15px;
 }
 
-#attribution {
+#events div {
+    display: inline-block;
+    position: relative;
+    background-color: #abc;
+    width: 140px;
+    height: 140px;
+    margin: 5px;
 }
 
+#events-area {
+    display: inline-block;
+    /*text-align: center;*/
+    position: relative;
+    left:5%;
+    width:90%;
+    overflow: hidden;
+}
 
+.events-arrow {
+    display: block;
+    position: absolute;
+    height: 150px;
+    top:50%;
+    width: 5%;
+}
 
+#events-arrow-right {
+    text-align: left;
+    right:0;
+}
 
+#events-arrow-left {
+    text-align:right;
+    left:0;
+}
+
+.control-slider {
+    margin: 0;
+    display: inline-block;
+}
 
 #status a {
     text-decoration: none;
@@ -214,7 +263,7 @@ Super-hacky, but hey.
 }
 
 #subscriptionButton input {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 /* Fix for "Deviation from Hour" not fitting in dt due to Twitter

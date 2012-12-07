@@ -6,35 +6,38 @@
         <a id="showAbout" href="#">&nbsp;<i class="icon-info-sign icon-white"></i> About <i id="aboutCaret" class="icon-caret-up icon-white"></i></a>
         <div id="release" class="shadow">BETA</div>
 </header>
+
 <div id="about" class="shadow panel">
         <p>
                 Sleuthing from the Internet monitors the seismic data generated
                 by regional networks around the world,<br />
-                allowing you to specify criteria of interest and be notified of events
-                immediately.  Please feel free to click<br />
-                the <i class="icon-cog"></i> below to change the settings, and
-                click subscribe to sign up or modify your notifications.
+                allowing you to specify criteria of interest and be notified of
+                matching events immediately.  Please feel<br />
+                free to click the <i class="icon-cog"></i> below to change the
+                settings, and click subscribe to sign up or modify your<br />
+                notifications.
         </p>
         <p>
-                inspired by: The Arms Control Wonk, Jeffrey Lewis's <a href="https://twitter.com/ArmsControlWonk"><i class="icon-twitter"></i></a> post, <b><a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">My Own Sleuthing From Home</a></b><br />
+                inspired by: The Arms Control Wonk <a href="https://twitter.com/ArmsControlWonk"><i class="icon-twitter"></i></a>, Jeffrey Lewis's post, <b><a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">My Own Sleuthing From Home</a></b><br />
                 writen by: Alex Wellerstein <a href="http://twitter.com/wellerstein"><i class="icon-twitter"></i></a> and Jim Kelly <a href="http://twitter.com/pthread"><i class="icon-twitter"></i></a><br />
                 source: GitHub <a href="https://github.com/jimjkelly/SleuthingFromTheInternet"><i class="icon-github"></i></a><br />
                 powered by: Heroku <a href="http://www.heroku.com"><i class="icon-cloud"></i></a>
         </p>
 </div>
 
-<div id="events" class="shadow panel">
-        <p><span id="eventsNum"></span> <a href="#" id="showEvents"><i class="icon-rss"></i></a> | <span id="maxDepthLabel"></span> km /  <span id="maxMagLabel"></span> Mag. /  <span id="minDevLabel"></span> min. dev. from hour <a href="#" id="showControl"><i class="icon-cog"></i></a></p>
+<div id="summary" class="shadow panel">
+        <p><span id="eventsNum"></span> <a href="#" id="showEvents"><i class="icon-rss"></i></a> | <span id="maxDepthLabel"></span> km /  <span id="maxMagLabel"></span> Mag. /  <span id="minDevLabel"></span> min. dev. from hour <a href="#" id="showControl" title="Modify the current settings"><i class="icon-cog"></i></a> -&nbsp;<span id="permalink"></span></p>
+</div>
+
+<div id="events" class="panel">
+        <span id="events-arrow-left" class="events-arrow"><i class="icon-chevron-left icon-large"></i></span>
+        <span id="events-area">&nbsp;</span>
+        <span id="events-arrow-right" class="events-arrow"><i class="icon-chevron-right icon-large"></i></span>
 </div>
 
 <div id="control" class="panel shadow">
-        Max Depth:  <input type="text" class="textinput" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/><div id="rangeDepth"></div><br/>
-        Max Magnitude: <input type="text" class="textinput" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/><div id="rangeMag"></div> <br/>
-        Deviation from Hour: <input type="text" class="textinput" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /><div id="rangeDev"></div> <br/>
+        <div class="span8 control-slider"><span>Max Depth:  <input type="text" class="input-mini" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/></span><span class="span3 control-slider" id="rangeDepth"></span></div>
+        <div>Max Magnitude: <input type="text" class="input-mini" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/><span id="rangeMag"></span> </div>
+        <div>Deviation from Hour: <input type="text" class="input-mini" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /><span id="rangeDev"></span> </div>
         Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
-        <div id="permalink">
-        </div>
 </div>
-
-<a class="abouttrigger" href="#">about</a>
-<a class="controltrigger" href="#">control</a>
