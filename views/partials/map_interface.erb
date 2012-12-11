@@ -120,11 +120,11 @@ function ready() {
 		//$("#events-area").width(150 * markerInfo.length);
 		// We only load up initial values if we haven't done so before
 		if ($("#events-area").html() == "&nbsp;") {
-			var visibleEvents = Math.floor($("#events-area").width() / 150);
+			var visibleEvents = Math.floor($("#events-area").width() / 150)
 			$("#events-area").html("")
 			$("#events-area").height(150)
 			for (var e in markerInfo.slice(0, visibleEvents)) {
-		  		$("#events-area").append(loadeventview(e, markerInfo[e]));
+		  		$("#events-area").append(loadeventview(e, markerInfo[e]))
 			}
 		}
 	});
@@ -189,15 +189,24 @@ function scrollEvents(direction, speed) {
 }
 
 function checkBounds(direction, speed) {
-	console.log($('.events:first').position()['left'])
 	if ($('.events:first').position()['left'] <= 0 && direction =='left') {
-		$('.events').stop()
-		$('.events').filter(':not(:animated)').animate({
-			'left': '0'
-		}, {
-			duration: speed,
-			queue: false
-		})
+        var lastVisibleMarker = parseInt($('.events:last').attr('id').replace(/\D/g, ''))
+        if (lastVisibleMarker == markerInfo.length) {
+            console.log('wtf')
+            $('.events').stop()
+            $('.events').filter(':not(:animated)').animate({
+                'left': '0'
+            }, {
+                duration: speed,
+                queue: false
+            })
+        } else {
+            $('.events:first').fadeOut(speed, function() {
+                // Remove the first marker, add the next
+                $('.events:first').remove()
+                $("#events-area").append(loadeventview((lastVisibleMarker + 1), markerInfo[(lastVisibleMarker + 1)]))
+            })
+        }
 	} else if (($('.events:last').position()['left'] >= ($('#events-area').width() - 150)) && direction == 'right') {
 		$('.events').stop()
 		$('.events').filter(':not(:animated)').animate({
@@ -394,11 +403,12 @@ function init() {
 // returns a div for an event with all relevant map information loaded up
 function loadeventview(index, event) {
   var list = '';
-  
+
   dateObj = getDateFromTime(event.time);
   deviation = getDeviationFromDate(dateObj);
   
   list+="<div id=\"event" + index + "\" class=\"events\">";
+  list+=index + "<br />";
   list+="<a href='#' title='Show details of event' onclick='getinfo("+index+",false);return false;'>&#171;</a> <a href='#' title='Show details of event and zoom in on it' onclick='getinfo("+index+",true);return false;'>&#8857;</a><br />";
   list+=dateObj.getUTCFullYear()+"-"+(dateObj.getUTCMonth()<9?"0"+(dateObj.getUTCMonth()+1):(dateObj.getUTCMonth()+1))+"-"+(dateObj.getUTCDate()<10?"0"+dateObj.getUTCDate():dateObj.getUTCDate()) + "<br />";
   list+="<a title='Click to see original event information from source' href='http://"+event.source + event.url + "' target='_blank'>"+event.source.replace("earthquake.","").replace("www.","")+"</a><br />";

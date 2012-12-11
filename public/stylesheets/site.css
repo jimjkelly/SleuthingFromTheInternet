@@ -166,7 +166,7 @@ Super-hacky, but hey.
 
 #events-area {
     display: inline-block;
-    /*text-align: center;*/
+    text-align: center;
     position: relative;
     left:5%;
     width:90%;
