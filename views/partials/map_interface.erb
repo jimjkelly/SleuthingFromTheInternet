@@ -133,24 +133,14 @@ function ready() {
 		scrollEvents('left', 1000)
 	}, function() {
 		$('.events').stop()
-		checkBounds('left', 1000)
+		//checkBounds('left', 1000)
 	});
 	$("#events-arrow-right").hover(function(){
 		scrollEvents('right', 1000)
 	}, function() {
 		$('.events').stop()
-		checkBounds('right', 1000)
+		//checkBounds('right', 1000)
 	});
-}
-
-function oppositeDirection(direction) {
-	if (direction == 'left') {
-		return 'right'
-	} else if (direction == 'right') {
-		return 'left'
-	} else {
-		throw 'you seem lost'
-	}
 }
 
 // Generic scrolling function, handles either left or right direction at given speed.
@@ -168,32 +158,22 @@ function scrollEvents(direction, speed) {
 		throw 'direction must either be left or right, you gave '.direction
 	}
 
-	var opposite = oppositeDirection(direction)
-
-	// check if item needs to be removed/added
-	//if ($('.events:' + toRemove).position()[direction] < 100) {
-	//	$('.events:' + toRemove).fadeOut('slow', function() {
-	//		$('.events:' + toRemove).remove()
-	//	})
-	//}
 	$('.events').filter(':not(:animated)').animate({
 		'left': move + '150px'
 	}, {
 		duration: speed,
 		complete: function() {
+            checkBounds(direction, speed)
 			scrollEvents(direction, speed)
 		},
 		queue: false
 	})
-	checkBounds(direction, speed)
 }
 
 function checkBounds(direction, speed) {
 	if ($('.events:first').position()['left'] <= 0 && direction =='left') {
         var lastVisibleMarker = parseInt($('.events:last').attr('id').replace(/\D/g, ''))
         if (lastVisibleMarker == markerInfo.length) {
-            console.log('wtf')
-            $('.events').stop()
             $('.events').filter(':not(:animated)').animate({
                 'left': '0'
             }, {
@@ -201,20 +181,22 @@ function checkBounds(direction, speed) {
                 queue: false
             })
         } else {
-            $('.events:first').fadeOut(speed, function() {
-                // Remove the first marker, add the next
-                $('.events:first').remove()
-                $("#events-area").append(loadeventview((lastVisibleMarker + 1), markerInfo[(lastVisibleMarker + 1)]))
-            })
+            $('#events-area').append(loadeventview((lastVisibleMarker + 1), markerInfo[(lastVisibleMarker + 1)]))
+            $('.events:first').remove()
         }
-	} else if (($('.events:last').position()['left'] >= ($('#events-area').width() - 150)) && direction == 'right') {
-		$('.events').stop()
-		$('.events').filter(':not(:animated)').animate({
-			'right': ($('#events-area').width() - 300)
-		}, {
-			duration: speed,
-			queue: false
-		})
+	} else if (($('.events:last').position()['left'] >= $('#events-area').width()) && direction == 'right') {
+        var firstVisibleMarker = parseInt($('.events:first').attr('id').replace(/\D/g, ''))
+        if (firstVisibleMarker == 0) {
+    		$('.events').filter(':not(:animated)').animate({
+    			'left': 0
+    		}, {
+    			duration: speed,
+    			queue: false
+    		})
+        } else {
+            $('#events-area').prepend(loadeventview((firstVisibleMarker - 1), markerInfo[(firstVisibleMarker - 1)]))
+            $('.events:last').remove()
+        }
 	}
 }
 
