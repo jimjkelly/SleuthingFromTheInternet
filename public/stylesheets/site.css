@@ -283,3 +283,6 @@ Super-hacky, but hey.
 #subscriptionResult .error {
     color: red;
 }
+
+/* override Twitter Bootstrap's default title */
+.popover-title { display: none; }

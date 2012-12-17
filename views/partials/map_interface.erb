@@ -92,55 +92,68 @@ var GmapGrayStyle = [
   }
 ];
 
+// A bunch of modifications and triggers that should be set up when our DOM is good to go
 function ready() {
-	$("#about").hide();
-	$("#control").hide();
-	$("#events").hide(); 
-	$("#showAbout").click(function () {
-		var ourDiv = $('#about');
-		var ourTrigger = $('#aboutCaret');
-		
-		ourDiv.slideToggle("fast");
-		if (ourTrigger.hasClass('rotate')) {
-			ourTrigger.removeClass('rotate');
-		} else {
-			ourTrigger.addClass('rotate');
-		}
-	});
-  
-	$("#showControl").click(function() {
-		$("#control").slideToggle("fast");
-	});
+	// hide our about and events by default
+    $('#about').hide()
+	$('#events').hide()
 
-	// This is really not how we want to handle this
-	$("#showEvents").click(function() {
-		$("#events").slideToggle("fast");
+    // if showAbout is clicked, show about content and rotate our carrot
+	$('#showAbout').click(function () {
+		var ourDiv = $('#about')
+		var ourTrigger = $('#aboutCaret')
+		
+		ourDiv.slideToggle('fast')
+		if (ourTrigger.hasClass('rotate')) {
+			ourTrigger.removeClass('rotate')
+		} else {
+			ourTrigger.addClass('rotate')
+		}
+	})
+
+    // if showEvents is clicked, display a subset of our events
+	$('#showEvents').click(function() {
+		$('#events').slideToggle('fast')
 
 		// Load up contents of events-area with some initial content
 		//$("#events-area").width(150 * markerInfo.length);
 		// We only load up initial values if we haven't done so before
-		if ($("#events-area").html() == "&nbsp;") {
-			var visibleEvents = Math.floor($("#events-area").width() / 150)
-			$("#events-area").html("")
-			$("#events-area").height(150)
+		if ($('#events-area').html() == '&nbsp;') {
+			var visibleEvents = Math.floor($('#events-area').width() / 150)
+			$('#events-area').html('')
+			$('#events-area').height(150)
 			for (var e in markerInfo.slice(0, visibleEvents)) {
-		  		$("#events-area").append(loadeventview(e, markerInfo[e]))
+		  		$('#events-area').append(loadeventview(e, markerInfo[e]))
 			}
 		}
-	});
+	})
   	
-	$("#events-arrow-left").hover(function(){
+    // hovering over the left arrow in events should scroll left
+	$('#events-arrow-left').hover(function(){
 		scrollEvents('left', 1000)
 	}, function() {
 		$('.events').stop()
 		//checkBounds('left', 1000)
-	});
-	$("#events-arrow-right").hover(function(){
+	})
+    // hovering over the right arrow in events should scroll right
+	$('#events-arrow-right').hover(function(){
 		scrollEvents('right', 1000)
 	}, function() {
 		$('.events').stop()
 		//checkBounds('right', 1000)
-	});
+	})
+
+    // show tooltips in #summary
+    $('#summary').tooltip({
+        selector: 'a[rel=tooltip]'
+    })
+
+    $('#showDepthControl').popover({
+        html: true,
+        content: '<div id="depthSlider"></div>',
+        placement: 'top'
+    })
+    $("#depthSlider").rangeSlider()
 }
 
 // Generic scrolling function, handles either left or right direction at given speed.
@@ -480,11 +493,11 @@ function refreshdata() {
     }
     
     //udpate the permalink
-    maxDepth = document.getElementById("maxDepth").value;
-    maxMag = document.getElementById("maxMag").value;
-    minDev = document.getElementById("minDev").value;
-    sourceLimit = document.getElementById("sourceSelect").value;
-    document.getElementById("permalink").innerHTML = "<a title='Permanent link to the chosen settings' href='"+[location.protocol, '//', location.host, location.pathname].join('')+"?dp="+maxDepth+"&mg="+maxMag+"&dv="+minDev+"&src="+sourceLimit+"&ll="+map.getCenter().toUrlValue()+"&zm="+map.getZoom()+"'><i class='icon-link'></i></a> - <a href='#dialog' name='modal' title='Subscribe to events with these settings'><i class='icon-envelope-alt'></i></a>";
+    maxDepth = document.getElementById('maxDepth').value;
+    maxMag = document.getElementById('maxMag').value;
+    minDev = document.getElementById('minDev').value;
+    sourceLimit = document.getElementById('sourceSelect').value;
+    document.getElementById('permalink').innerHTML = '<a rel="tooltip" title="Permanent link to the chosen settings" href="'+[location.protocol, '//', location.host, location.pathname].join('')+'?dp='+maxDepth+'&mg='+maxMag+'&dv='+minDev+'&src='+sourceLimit+'&ll='+map.getCenter().toUrlValue()+'&zm='+map.getZoom()+'"><i class="icon-link"></i></a> - <a href="#dialog" rel="tooltip" name="modal" title="Subscribe to events with these settings"><i class="icon-envelope-alt"></i></a>';
      
     // Refresh subscription options
     $( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));

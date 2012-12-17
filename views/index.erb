@@ -13,7 +13,7 @@
                 by regional networks around the world,<br />
                 allowing you to specify criteria of interest and be notified of
                 matching events immediately.  Please feel<br />
-                free to click the <i class="icon-cog"></i> below to change the
+                free to click the icons below to change the
                 settings, and click subscribe to sign up or modify your<br />
                 notifications.
         </p>
@@ -26,7 +26,7 @@
 </div>
 
 <div id="summary" class="shadow panel">
-        <p><span id="eventsNum"></span> <a href="#" id="showEvents"><i class="icon-rss"></i></a> | <span id="maxDepthLabel"></span> km /  <span id="maxMagLabel"></span> Mag. /  <span id="minDevLabel"></span> min. dev. from hour <a href="#" id="showControl" title="Modify the current settings"><i class="icon-cog"></i></a> -&nbsp;<span id="permalink"></span></p>
+        <p><span id="eventsNum"></span> <a href="#" rel="tooltip" id="showEvents" title="Show list of currently selected events"><i class="icon-list-ul"></i></a> - <span id="maxDepthLabel"></span> km <a href="#" rel="tooltip" id="showDepthControl" title="Modify depth threshold"><i class="icon-circle-arrow-down"></i></a> <span id="maxMagLabel"></span> Mag. <a href="#" rel="tooltip" id="showMagControl" title="Modify magnitude threshold"><i class="icon-bolt"></i></a> <span id="minDevLabel"></span> Min. <a href="#" rel="tooltip" id="showDevControl" title="Modify minimum deviation from hour threshold"><i class="icon-time"></i></a> -&nbsp;<span id="permalink"></span></p>
 </div>
 
 <div id="events" class="panel">
@@ -35,7 +35,7 @@
         <span id="events-arrow-right" class="events-arrow"><i class="icon-chevron-right icon-large"></i></span>
 </div>
 
-<div id="control" class="panel shadow">
+<div id="control" style="display:none;">
         <div class="span8 control-slider"><span>Max Depth:  <input type="text" class="input-mini" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/></span><span class="span3 control-slider" id="rangeDepth"></span></div>
         <div>Max Magnitude: <input type="text" class="input-mini" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/><span id="rangeMag"></span> </div>
         <div>Deviation from Hour: <input type="text" class="input-mini" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /><span id="rangeDev"></span> </div>
