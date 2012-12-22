@@ -147,13 +147,138 @@ function ready() {
     $('#summary').tooltip({
         selector: 'a[rel=tooltip]'
     })
-
+    
+    var $depthController = $('<div>').rangeSlider({
+        bounds: { min:0, max:10000 },
+        defaultValues: { min:0, max:2500 },
+        arrows: true,
+        valueLabels: "change"
+    })
+    //addPopoverController('#showDepthControl', $depthController)
     $('#showDepthControl').popover({
         html: true,
-        content: '<div id="depthSlider"></div>',
-        placement: 'top'
+        trigger: 'manual',
+        placement: 'top',
+    }).click(function() {
+        if ($(this).toggleClass('active').hasClass('active')) {
+            $(this).tooltip('disable')
+            $('.tooltip').remove()
+
+            // recreate the slider
+            var $sliderControl = $('<div id="sliderControlContainer">').rangeSlider({
+                    bounds: { min:0, max:10000 },
+                    defaultValues: { min:0, max:2500 },
+                    arrows: false,
+                    valueLabels: "change"
+                })
+            // show the popover and append our content
+            $(this).popover('show')
+            $('.popover-content')
+                .empty()
+                .append($sliderControl)
+            // hack: the height calculation here?  The fact we do this at all?
+            $('.popover').height($('.ui-rangeSlider-container').height() * 1.65)
+        } else {
+            $(this).tooltip('enable')
+            $(this).popover('hide')
+        }
     })
-    $("#depthSlider").rangeSlider()
+    //debugger;
+    /*
+    //addPopoverController('#showMagControl', $magController)
+    $('#showMagControl').popover({
+        html: true,
+        trigger: 'manual',
+        placement: 'top'
+    }).click(function() {
+        if ($(this).toggleClass('active').hasClass('active')) {
+            // hide any already showing popovers, and enable their
+            // tool tips.  we do this because just clicking on
+            // another control switch skips our code in the
+            // else
+            //$('.controlswitch').popover('hide')
+            //$('.controlswitch').tooltip('enable')
+            //debugger;
+            // Now disable the tooltip for this control, as it's 
+            // definitely showing.
+            $(this).tooltip('disable')
+            $('.tooltip').remove()
+
+            // show the popover and append our content
+            $(this).popover('show')
+            $('.popover-content')
+                .empty()
+                .append($magController)
+        } else {
+            $(this).tooltip('enable')
+            $magController.detach()
+            $(this).popover('hide')
+        }
+    })    
+    //addPopoverController('#showDevControl', $devController)
+    $('#showDevControl').popover({
+        html: true,
+        trigger: 'manual',
+        placement: 'top'
+    }).click(function() {
+        if ($(this).toggleClass('active').hasClass('active')) {
+            // hide any already showing popovers, and enable their
+            // tool tips.  we do this because just clicking on
+            // another control switch skips our code in the
+            // else
+            //$('.controlswitch').popover('hide')
+            //$('.controlswitch').tooltip('enable')
+            //debugger;
+            // Now disable the tooltip for this control, as it's 
+            // definitely showing.
+            $(this).tooltip('disable')
+            $('.tooltip').remove()
+
+            // show the popover and append our content
+            $(this).popover('show')
+            $('.popover-content')
+                .empty()
+                .append($devController)
+        } else {
+            $(this).tooltip('enable')
+            $devController.detach()
+            $(this).popover('hide')
+        }
+    })
+*/
+
+}
+
+function addPopoverController(element, controller) {
+    $(element).popover({
+        html: true,
+        trigger: 'manual',
+        placement: 'top'
+    }).click(function() {
+        if ($(this).toggleClass('active').hasClass('active')) {
+            // hide any already showing popovers, and enable their
+            // tool tips.  we do this because just clicking on
+            // another control switch skips our code in the
+            // else
+            //$('.controlswitch').popover('hide')
+            //$('.controlswitch').tooltip('enable')
+            //debugger;
+            // Now disable the tooltip for this control, as it's 
+            // definitely showing.
+            $(this).tooltip('disable')
+            $('.tooltip').remove()
+
+            // show the popover and append our content
+            $(this).popover('show')
+            $('.popover-content')
+                .empty()
+                .append(controller)
+        } else {
+            $(this).tooltip('enable')
+            controller.detach()
+            $(this).popover('hide')
+        }
+    })
 }
 
 // Generic scrolling function, handles either left or right direction at given speed.

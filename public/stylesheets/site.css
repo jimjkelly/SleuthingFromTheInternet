@@ -284,5 +284,6 @@ Super-hacky, but hey.
     color: red;
 }
 
-/* override Twitter Bootstrap's default title */
+/* override Twitter Bootstrap's default title and position for popovers */
+.popover { top: -20px !important; }
 .popover-title { display: none; }
