@@ -173,9 +173,11 @@ function addSliderPopover(controller) {
             })
             
             // type gives us the bounds so we can recreate the slider
+            $currentValue = parseInt($('#max' + type + 'Label').text())
+            console.log('currentValue: ' + $currentValue)
             $sliderControl = $('<div id="sliderControlContainer">').rangeSlider({
-                    bounds: { min:0, max:10000 },
-                    defaultValues: { min:0, max:2500 },
+                    bounds: { min:0, max:$currentValue * 2 },
+                    defaultValues: { min:0, max:$currentValue },
                     arrows: false,
                     valueLabels: "change"
                 })

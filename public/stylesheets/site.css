@@ -285,5 +285,5 @@ Super-hacky, but hey.
 }
 
 /* override Twitter Bootstrap's default title and position for popovers */
-.popover { top: -20px !important; }
+.popover { top: -20px !important; background: silver; }
 .popover-title { display: none; }
