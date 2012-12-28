@@ -23,6 +23,7 @@ var url_vars; //URLs passed via the query string
 var sources = []; //sources of data
 var dataMaxDepth = 0; //max depth
 var dataMaxMag = 0; //max magnitude
+var dataMaxDev = 30; // maximum time deviation
 var t = []; //array that holds marker icons
 
 // ensure we have a console to write to
@@ -155,33 +156,50 @@ function ready() {
 }
 
 function addSliderPopover(controller) {
-    type = getControlType(controller)
+    // Our current controller id, as consumable by jQuery
     controlid = '#' + controller.id
 
     $(controlid).click(function() {
-        type = getControlType(this)
+        // controller tells us which control we're currently viewing
         controller = this.id
+
+        // toggles the controller
         if ($(this).toggleClass('active').hasClass('active')) {
+            // type allows us to access relevant information elsewhere on the page
+            // and is used to recreate the slider based on current settings
+            type = getControlType(this)
+
+            // remove the active tooltip (will be re-enabled on close)
             $(this).tooltip('disable')
             $('.tooltip').remove()
 
-            // kill any existing popovers by simulating a click on them
+            // kill any existing control popovers
             $('.controlswitch').each(function() {
                 if ((this.id != controller) && $(this).hasClass('active')) {
+                    // We simulate a click because other efforts don't seem
+                    // to work as well.
                     $(this).click()
                 }
             })
             
-            // type gives us the bounds so we can recreate the slider
-            $currentValue = parseInt($('#max' + type + 'Label').text())
-            console.log('currentValue: ' + $currentValue)
+
+            // current value comes from the summary label
+            var $currentValue = parseInt($('#max' + type + 'Label').text())
+
+            // we have a value indicating the highest value set when we
+            // pulled in our data, let's programmatically get that here
+            var dataMax = parseInt(window['dataMax' + type])
+
+            // Create the rangeSlider
             $sliderControl = $('<div id="sliderControlContainer">').rangeSlider({
-                    bounds: { min:0, max:$currentValue * 2 },
+                    // show our upper bound as dataMax + 10%
+                    bounds: { min:0, max: dataMax + (dataMax * .10)},
                     defaultValues: { min:0, max:$currentValue },
-                    arrows: false,
-                    valueLabels: "change"
+                    arrows: true,
+                    valueLabels: "show"
                 })
 
+            // Create and show the popover, using the slider control
             $(this).popover({
                 'html': true,
                 'placement':'top',
@@ -189,6 +207,8 @@ function addSliderPopover(controller) {
                 'trigger':'manual'
             })
             $(this).popover('show')
+
+            // This hack ensures the popover is reasonably sized to the RangeSlider
             $('.popover').height($('.ui-rangeSlider-container').height() * 1.65)
         } else {
             // Completely destroy the range slider, re-enable tooltips, and destroy
@@ -202,6 +222,7 @@ function addSliderPopover(controller) {
  
 }
 
+// deconstructs our controller switch ids to get the type
 function getControlType(controller) {
     return controller.id.replace('show', '').replace('Control', '')
 }
@@ -233,6 +254,8 @@ function scrollEvents(direction, speed) {
 	})
 }
 
+// looks to see if items scrolling in the events window are going off the side,
+// and if so removes them, adding a new one to the other side
 function checkBounds(direction, speed) {
 	if ($('.events:first').position()['left'] <= 0 && direction =='left') {
         var lastVisibleMarker = parseInt($('.events:last').attr('id').replace(/\D/g, ''))
@@ -343,10 +366,10 @@ function init() {
 	      count++;
 	    });
 	    
-	    //update the UI elements, including sliders
+	    //update the labels
 	    document.getElementById("maxDepth").value = dataMaxDepth;
 	    document.getElementById("maxMag").value = dataMaxMag;
-      
+        // TODO: Reconcile this with the new slider behavor
 	    $( "#rangeMag" ).slider({
 		range: "min",
 		value: dataMaxMag,
@@ -395,8 +418,8 @@ function init() {
 		    el.dispatchEvent(ev);
 		}
 	    });
-	    $("#minDev" ).val($("#rangeDev").slider("value"));
-	    $("#minDevLabel").html($("#rangeDev").slider("value"));
+	    $("#maxDev" ).val($("#rangeDev").slider("value"));
+	    $("#maxDevLabel").html($("#rangeDev").slider("value"));
       
 	    for(var i in sources) {
 			document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
