@@ -134,14 +134,12 @@ function ready() {
 		scrollEvents('left', 1000)
 	}, function() {
 		$('.events').stop()
-		//checkBounds('left', 1000)
 	})
     // hovering over the right arrow in events should scroll right
 	$('#events-arrow-right').hover(function(){
 		scrollEvents('right', 1000)
 	}, function() {
 		$('.events').stop()
-		//checkBounds('right', 1000)
 	})
 
     // show tooltips in #summary
@@ -150,9 +148,49 @@ function ready() {
     })
     
     // add popover ability to each control switch
-    $('.controlswitch').each(function() {
+    $('.slider-control').each(function() {
         addSliderPopover(this)
     })
+
+    // add permalink popover - it'd be nice to maybe get this integrated
+    // with our addSliderPopover, without the slider part obviously, somehow.
+    $('#showPermalink').click(function() {
+        if ($(this).toggleClass('active').hasClass('active')) {
+            // remove the active tooltip (will be re-enabled on close)
+            $(this).tooltip('disable')
+            $('.tooltip').remove()
+
+            // kill any existing control popovers
+            $('.switch').each(function() {
+                if ((this.id != 'showPermalink') && $(this).hasClass('active')) {
+                    // We simulate a click because other efforts don't seem
+                    // to work as well.
+                    $(this).click()
+                }
+            })
+            // Create and show the popover, using the slider control
+            $(this).popover({
+                'html': true,
+                'placement':'top',
+                'content':'permalink: <a href="' + $('#showPermalink').prop('permalink') + '">' + $('#showPermalink').prop('permalink') + '</a>',
+                'trigger':'manual'
+            })
+            $(this).popover('show')
+            $('.popover').width($('.popover a').width() * 1.4)
+        } else {
+            // TODO: i'd like to have a tooltip here but it's borked.
+            //$(this).tooltip('enable')
+            $(this).popover('destroy')
+        }
+    })
+
+    // get alerts about values change in a slider
+    $(document).on('valuesChanging', '.ui-rangeSlider', function(e, data){
+        var controlType = e.currentTarget.id.replace('SliderControlContainer', '')
+        $('#max' + controlType + 'Label').html(parseInt(data.values.max))
+        $('#min' + controlType + 'Label').html(parseInt(data.values.min))
+        refreshdata()
+    });
 }
 
 function addSliderPopover(controller) {
@@ -174,7 +212,7 @@ function addSliderPopover(controller) {
             $('.tooltip').remove()
 
             // kill any existing control popovers
-            $('.controlswitch').each(function() {
+            $('.switch').each(function() {
                 if ((this.id != controller) && $(this).hasClass('active')) {
                     // We simulate a click because other efforts don't seem
                     // to work as well.
@@ -184,18 +222,27 @@ function addSliderPopover(controller) {
             
 
             // current value comes from the summary label
-            var $currentValue = parseInt($('#max' + type + 'Label').text())
+            var $currentMaxValue = parseInt($('#max' + type + 'Label').text())
+            var $currentMinValue = parseInt($('#min' + type + 'Label').text())
 
             // we have a value indicating the highest value set when we
             // pulled in our data, let's programmatically get that here
             var dataMax = parseInt(window['dataMax' + type])
 
+            // set the multiplier (ie how far above our largest value you are allowed to slide)
+            if (type == "Dev") {
+                multiplier = 0
+            } else {
+                multiplier = .10
+            }
+
             // Create the rangeSlider
-            $sliderControl = $('<div id="sliderControlContainer">').rangeSlider({
-                    // show our upper bound as dataMax + 10%
-                    bounds: { min:0, max: dataMax + (dataMax * .10)},
-                    defaultValues: { min:0, max:$currentValue },
+            $sliderControl = $('<div id="' + type + 'SliderControlContainer">').rangeSlider({
+                    // show our upper bound as dataMax + 10% if not the deviation
+                    bounds: { min:0, max: Math.ceil(dataMax + (dataMax * multiplier))},
+                    defaultValues: { min:$currentMinValue, max:$currentMaxValue },
                     arrows: true,
+                    step: 1,
                     valueLabels: "show"
                 })
 
@@ -213,7 +260,7 @@ function addSliderPopover(controller) {
         } else {
             // Completely destroy the range slider, re-enable tooltips, and destroy
             // the popover
-            $('#sliderControlContainer').rangeSlider('destroy')
+            $('#' + type + 'SliderControlContainer').rangeSlider('destroy')
             $(this).tooltip('enable')
             $(this).popover('destroy')
         }
@@ -365,95 +412,55 @@ function init() {
 	      markerInfo.push(val.events);
 	      count++;
 	    });
-	    
-	    //update the labels
-	    document.getElementById("maxDepth").value = dataMaxDepth;
-	    document.getElementById("maxMag").value = dataMaxMag;
-        // TODO: Reconcile this with the new slider behavor
-	    $( "#rangeMag" ).slider({
-		range: "min",
-		value: dataMaxMag,
-		min: 0,
-		max: dataMaxMag,
-		step: .1,
-		slide: function( event, ui ) {
-		    $( "#maxMag" ).val(ui.value );
-		    el = document.getElementById('maxMag');
-		    ev = document.createEvent('Event');
-		    ev.initEvent('change', true, false);
-		    el.dispatchEvent(ev);
-		}
-	    });
-	    $("#maxMag").val($("#rangeMag").slider("value"));
-	    $("#maxMagLabel").html($("#rangeMag").slider("value"));
-	     
-	    $("#rangeDepth").slider({
-		range: "min",
-		value: dataMaxDepth,
-		min: 0,
-		max: dataMaxDepth,
-		step: .01,
-		slide: function( event, ui ) {
-		    $( "#maxDepth" ).val(ui.value );
-		    el = document.getElementById('maxDepth');
-		    ev = document.createEvent('Event');
-		    ev.initEvent('change', true, false);
-		    el.dispatchEvent(ev);
-		}
-	    });
-	    $("#maxDepth").val($("#rangeDepth").slider("value"));
-	    $("#maxDepthLabel").html($("#rangeDepth").slider("value"));
+
+	    $('#maxDepthLabel').html(Math.ceil(dataMaxDepth))
+        $('#maxMagLabel').html(Math.ceil(dataMaxMag));
+	    $('#maxDevLabel').html("30");
       
-	    $("#rangeDev").slider({
-		range: "min",
-		value: dataMaxDepth,
-		min: 0,
-		max: 30,
-		step: 1,
-		slide: function( event, ui ) {
-		    $("#minDev").val(ui.value );
-		    el = document.getElementById('minDev');
-		    ev = document.createEvent('Event');
-		    ev.initEvent('change', true, false);
-		    el.dispatchEvent(ev);
-		}
-	    });
-	    $("#maxDev" ).val($("#rangeDev").slider("value"));
-	    $("#maxDevLabel").html($("#rangeDev").slider("value"));
-      
+        // TODO: handle a seourceselect, uh, selector.
 	    for(var i in sources) {
 			document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
 	    }
-      
-	    //if we have URL variables, then update UI based on them
-	    url_vars = getUrlVars();
-	    if(url_vars["dp"]) {
-		document.getElementById("maxDepth").value = url_vars["dp"];
-		$("#rangeDepth").slider("value", url_vars["dp"]);
-	    }
-	    if(url_vars["mg"]) {
-		document.getElementById("maxMag").value = url_vars["mg"];
-		$("#rangeMag").slider("value", url_vars["mg"]);
-	    }
-	    if(url_vars["dv"]) {
-		document.getElementById("minDev").value = url_vars["dv"];
-		$("#rangeDev").slider("value", url_vars["dv"]);
-	    }
-	    if(url_vars["src"]) {
-		document.getElementById("sourceSelect").value = url_vars["src"];
-	    }
-	    if(url_vars["zm"]) {
-		map.setZoom(parseInt(url_vars["zm"]));      
-	    }
-	    if(url_vars["ll"]) {
-		var ll = url_vars["ll"].split(",");
-		map.panTo(new google.maps.LatLng(ll[0],ll[1]));
-	    }
 	    
 	    refreshdata();
+
+        //if we have URL variables, then update UI based on them
+        url_vars = getUrlVars();
+        if (url_vars['maxdepth']) {
+            console.log('ohai: ' + url_vars['maxdepth'])
+            $('#maxDepthLabel').html(Math.ceil(url_vars['maxdepth']))
+        }
+        if (url_vars['mindepth']) {
+            $('#minDepthLabel').html(Math.floor(url_vars['mindepth']))
+        }
+        if (url_vars['maxmag']) {
+            $('#maxMagLabel').html(Math.ceil(url_vars['maxmag']))
+        }
+        if (url_vars['minmag']) {
+            $('#minMagLabel').html(Math.floor(url_vars['minmag']))
+        }
+        if (url_vars['maxdev']) {
+            $('#maxDevLabel').html(Math.ceil(url_vars['maxdev']))
+        }
+        if (url_vars['mindev']) {
+            $('#minDevLabel').html(Math.floor(url_vars['mindev']))
+        }
+        if(url_vars["src"]) {
+          document.getElementById("sourceSelect").value = url_vars["src"];
+        }
+        if(url_vars["zm"]) {
+          map.setZoom(parseInt(url_vars["zm"]));      
+        }
+        if(url_vars["ll"]) {
+          var ll = url_vars["ll"].split(",");
+          map.panTo(new google.maps.LatLng(ll[0],ll[1]));
+        }
+
+        // TODO: handle error state better
 	  }).error(function(jqXHR, textStatus, errorThrown) { document.getElementById("events").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});
 	});
     
+    // TODO: This should probably be moved to ready
     //if close button is clicked
     $('.window .close').click(function (e) {
 	//Cancel the link behavior
@@ -536,49 +543,67 @@ function refreshdata() {
     var minDev;
     var deviation;
     var visible = 0;
-    maxDepth = document.getElementById("maxDepth").value;
-    maxMag = document.getElementById("maxMag").value;
-    minDev = document.getElementById("minDev").value;
-    sourceLimit = document.getElementById("sourceSelect").value;
-     
+    minDepth = parseInt($('#minDepthLabel').html())
+    maxDepth = parseInt($('#maxDepthLabel').html())
+    minMag = parseInt($('#minMagLabel').html())
+    maxMag = parseInt($('#maxMagLabel').html())
+    minDev = parseInt($('#minDevLabel').html())
+    maxDev = parseInt($('#maxDevLabel').html())
+
+    // TODO: still need to work on that source select thing
+    //sourceLimit = document.getElementById("sourceSelect").value;
+    sourceLimit = ""
+
     // here we need to iterate through markers and get turn on ones in the
     // view criteria
     for (var i = 0; i < markers.length; i++) {
-      bounced = false;
-       
-      if(maxDepth!="") { if(markerInfo[i].depth>maxDepth) bounced=true; };
-      if(maxMag!="") { if(markerInfo[i].mag>maxMag) bounced=true; };
- 
-      dateObj = getDateFromTime(markerInfo[i].time)
-      deviation = getDeviationFromDate(dateObj);
- 
-      if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
-      if(minDev!="") { if(deviation>minDev) bounced = true; };
-      
-      if (bounced) {
-        markers[i].setVisible(false);
-        $("#event"+i).hide();
-      } else {
-        markers[i].setVisible(true);
-        $("#event"+i).show();
-        visible++;
-      }
+        bounced = false
+        if (maxDepth != '' && parseInt(markerInfo[i].depth)>maxDepth) { 
+            bounced = true 
+        }
+        if (minDepth != '' && parseInt(markerInfo[i].depth)<minDepth) { 
+            bounced = true 
+        }
+        if (maxMag != '' && parseInt(markerInfo[i].mag)>maxMag) {
+            bounced = true 
+        }
+        if (minMag != '' && parseInt(markerInfo[i].mag)<minMag) {
+            bounced = true
+        }
+
+        dateObj = getDateFromTime(markerInfo[i].time)
+        deviation = getDeviationFromDate(dateObj);
+        if (maxDev != '' && deviation > maxDev) {
+            bounced = true 
+        }
+        if (minDev != '' && deviation < minDev) {
+            bounced = true
+        }
+
+        if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
+
+        // TODO: reconcile these refreshes of the old-style events with our new event viewer      
+        if (bounced) {
+            markers[i].setVisible(false);
+            $("#event"+i).hide();
+        } else {
+            markers[i].setVisible(true);
+            $("#event"+i).show();
+            visible++;
+        }
     }
     
     //udpate the permalink
-    maxDepth = document.getElementById('maxDepth').value;
-    maxMag = document.getElementById('maxMag').value;
-    minDev = document.getElementById('minDev').value;
-    sourceLimit = document.getElementById('sourceSelect').value;
-    document.getElementById('permalink').innerHTML = '<a rel="tooltip" title="Permanent link to the chosen settings" href="'+[location.protocol, '//', location.host, location.pathname].join('')+'?dp='+maxDepth+'&mg='+maxMag+'&dv='+minDev+'&src='+sourceLimit+'&ll='+map.getCenter().toUrlValue()+'&zm='+map.getZoom()+'"><i class="icon-link"></i></a> - <a href="#dialog" rel="tooltip" name="modal" title="Subscribe to events with these settings"><i class="icon-envelope-alt"></i></a>';
-     
-    // Refresh subscription options
+    $('#showPermalink').prop('permalink', [location.protocol, '//', location.host, location.pathname].join('') + '?maxdepth=' + maxDepth + '&mindepth=' + minDepth + '&maxmag=' + maxMag + '&minmag=' + minMag + '&maxdev=' + maxDev + '&mindev=' + minDev + '&src=' + sourceLimit + '&ll=' + map.getCenter().toUrlValue() + '&zm=' + map.getZoom())
+
+
+    /* TODO: Refresh subscription options
     $( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));
     $( "#maxMagSubscribe").text($( "#rangeMag" ).slider( "value" ));
     $( "#hourDeviationSubscribe").text($( "#rangeDev" ).slider( "value" ));
-    $( "#sourceLimitSubscribe").text(sources[document.getElementById("sourceSelect").value])
+    $( "#sourceLimitSubscribe").text(sources[document.getElementById("sourceSelect").value])*/
  
-    //setup subscribe modal dialog - this is horribly inefficient
+    /* TODO: setup subscribe modal dialog
     $('a[name=modal]').click(function(e) {
         //Cancel the link behavior
         e.preventDefault();
@@ -606,7 +631,6 @@ function refreshdata() {
       
         //transition effect
         $(id).fadeIn(2000); 
-      
     });
      
     //if close button is clicked
@@ -622,7 +646,7 @@ function refreshdata() {
     $('#mask').click(function () {
         $(this).hide();
         $('.window').hide();
-    });         
+    });*/        
  
     $(window).resize(function () {
       

@@ -201,10 +201,6 @@ Super-hacky, but hey.
     font-weight: normal;
 }
 
-#permalink {
-    float: right;
-}
-
 #mask {
   position:absolute;
   left:0;
@@ -285,5 +281,5 @@ Super-hacky, but hey.
 }
 
 /* override Twitter Bootstrap's default title and position for popovers */
-.popover { top: -20px !important; background: silver; }
+.popover { top: -20px !important; background: silver;}
 .popover-title { display: none; }
