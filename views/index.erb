@@ -26,7 +26,7 @@
 </div>
 
 <div id="summary" class="shadow panel">
-        <p><span id="eventsNum"></span> <a href="#" rel="tooltip" id="showEvents" title="Show list of currently selected events"><i class="icon-list-ul"></i></a> - <span id="minDepthLabel">0</span> - <span id="maxDepthLabel"></span> km <a href="#" rel="tooltip" id="showDepthControl" class="slider-control switch" title="Modify depth threshold"><i class="icon-circle-arrow-down"></i></a> <span id="minMagLabel">0</span> - <span id="maxMagLabel"></span> Mag. <a href="#" rel="tooltip" id="showMagControl" class="slider-control switch" title="Modify magnitude threshold"><i class="icon-bolt"></i></a> <span id="minDevLabel">0</span> - <span id="maxDevLabel"></span> Min. <a href="#" rel="tooltip" id="showDevControl" class="slider-control switch" title="Modify minimum deviation from hour threshold"><i class="icon-time"></i></a> - <a href="#" id="showPermalink" class="switch" title="Permanent link to the chosen settings"><i class="icon-link"></i></a> - <a href="#" rel="tooltip" title="Subscribe to events with these settings"><i class="icon-envelope-alt"></i></a></p>
+        <p><span id="eventsNum"></span> <a href="#" rel="tooltip" id="showEvents" title="Show list of currently selected events"><i class="icon-list-ul"></i></a> - <span id="minDepthLabel">0</span> - <span id="maxDepthLabel"></span> km <a href="#" rel="tooltip" id="showDepthControl" class="slider-control switch" title="Modify depth threshold"><i class="icon-circle-arrow-down"></i></a> <span id="minMagLabel">0</span> - <span id="maxMagLabel"></span> Mag. <a href="#" rel="tooltip" id="showMagControl" class="slider-control switch" title="Modify magnitude threshold"><i class="icon-bolt"></i></a> <span id="minDevLabel">0</span> - <span id="maxDevLabel"></span> Min. <a href="#" rel="tooltip" id="showDevControl" class="slider-control switch" title="Modify minimum deviation from hour threshold"><i class="icon-time"></i></a> - <a href="#" id="showPermalink" class="switch" title="Permanent link to the chosen settings"><i class="icon-link"></i></a> - <a href="#subscriptionModal" title="Subscribe to events with these settings" data-toggle="modal" onclick="refreshSubscription()"><i class="icon-envelope-alt"></i></a></p>
 </div>
 
 <div id="events" class="panel">
@@ -35,9 +35,83 @@
         <span id="events-arrow-right" class="events-arrow"><i class="icon-chevron-right icon-large"></i></span>
 </div>
 
+<!-- This can't be deleted until we add it elsewhere, as it is referenced for populating our js list of sources -->
 <div id="control" style="display:none;">
         <div class="span8 control-slider"><span>Max Depth:  <input type="text" class="input-mini" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/></span><span class="span3 control-slider" id="rangeDepth"></span></div>
         <div>Max Magnitude: <input type="text" class="input-mini" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/><span id="rangeMag"></span> </div>
         <div>Deviation from Hour: <input type="text" class="input-mini" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /><span id="rangeDev"></span> </div>
-        Limit to Source: <select id="sourceSelect" onchange="refreshdata();"></select><br/>
+        Limit to Source: <select id="sourceSelect" onchange="refreshdata()"></select><br/>
 </div>
+
+<div id="subscriptionModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="myModalLabel">Subscribe to Email Notifications</h3>
+        </div>
+        <div class="modal-body">
+                <p>Enter an email address to receive email alerts when new events are seen matching the criteria below.</p>
+                <br />
+                <p>Current Settings:</p>
+                <div id="subscriptionSettings">
+                        <dl class="dl-horizontal">
+                                <div class="row">
+                                        <dt>Depth:</dt>
+                                        <dd><span id="minDepthSubscribe"></span> - <span id="maxDepthSubscribe"></span> km</dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Max Magnitude:</dt>
+                                        <dd><span id="minMagSubscribe"></span> - <span id="maxMagSubscribe"></span> Magnitude</dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Deviation from Hour:</dt>
+                                        <dd><span id="minDevSubscribe"></span> - <span id="maxDevSubscribe"></span> Minutes</dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Limit to Source:</dt>
+                                        <dd><span id="sourceSubscribe"></span></dd>
+                                </div>
+                        </dl>
+                </div>
+                <p>Email Information:</p>
+                <div id="emailInformation">
+                        <dl class="dl-horizontal">
+                                <div class="row">
+                                        <dt>Address:</dt>
+                                        <dd>
+                                                <div class="input-append">
+                                                        <input class="span3" name="email" onblur="verifyEmail()" type="text" placeholder="your@email.com…" />
+                                                        <span id="emailOK" class="add-on"></span>
+                                                </div>
+                                        </dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Digest:</dt>
+                                        <dd>
+                                                <input type="checkbox" name="digest" value="true" checked="yes" /> 
+                                                <small>uncheck to receive email alerts as events occur</small>
+                                        </dd>
+                                </div>
+                        </dl>
+                </div>
+                <div id="subscriptionResult" style="display: none;">
+                        <p>Results:</p>
+                        <div id="subscriptionResultText"></div>
+                </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                <button id="subscribeButton" class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="subscribe()" disabled>Subscribe</button>
+        </div>
+</div>
+
+<!-- This is a generic alert modal that will be displayed at page start to the user if a value has been assigned serverside. -->
+<% if defined?(alert) %>
+        <div id="alertModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-body">
+                        <%= alert %>
+                </div>
+                <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                </div>
+        </div>
+<% end %>

@@ -265,8 +265,11 @@ function addSliderPopover(controller) {
             $(this).popover('destroy')
         }
     })
-
- 
+    
+    // This will only exist in the rendered HTML if we set a value to alert serverside
+    if ($('#alertModal')) {
+        $('#alertModal').modal('show')
+    }
 }
 
 // deconstructs our controller switch ids to get the type
@@ -459,20 +462,6 @@ function init() {
         // TODO: handle error state better
 	  }).error(function(jqXHR, textStatus, errorThrown) { document.getElementById("events").innerHTML = "<div class='ui-state-error'>Error loading data.</div>";});
 	});
-    
-    // TODO: This should probably be moved to ready
-    //if close button is clicked
-    $('.window .close').click(function (e) {
-	//Cancel the link behavior
-	e.preventDefault();
-	$('#mask, .window').hide();
-    });     
-     
-    //if mask is clicked
-    $('#mask').click(function () {
-	$(this).hide();
-	$('.window').hide();
-    });
 }
 
 // returns a div for an event with all relevant map information loaded up
@@ -595,58 +584,6 @@ function refreshdata() {
     
     //udpate the permalink
     $('#showPermalink').prop('permalink', [location.protocol, '//', location.host, location.pathname].join('') + '?maxdepth=' + maxDepth + '&mindepth=' + minDepth + '&maxmag=' + maxMag + '&minmag=' + minMag + '&maxdev=' + maxDev + '&mindev=' + minDev + '&src=' + sourceLimit + '&ll=' + map.getCenter().toUrlValue() + '&zm=' + map.getZoom())
-
-
-    /* TODO: Refresh subscription options
-    $( "#maxDepthSubscribe").text($( "#rangeDepth" ).slider( "value" ));
-    $( "#maxMagSubscribe").text($( "#rangeMag" ).slider( "value" ));
-    $( "#hourDeviationSubscribe").text($( "#rangeDev" ).slider( "value" ));
-    $( "#sourceLimitSubscribe").text(sources[document.getElementById("sourceSelect").value])*/
- 
-    /* TODO: setup subscribe modal dialog
-    $('a[name=modal]').click(function(e) {
-        //Cancel the link behavior
-        e.preventDefault();
-        //Get the A tag
-        var id = $(this).attr('href');
-      
-        //Get the screen height and width
-        var maskHeight = $(document).height();
-        var maskWidth = $(window).width();
-      
-        //Set height and width to mask to fill up the whole screen
-        $('#mask').css({'width':maskWidth,'height':maskHeight});
-          
-        //transition effect     
-        $('#mask').fadeIn(1000);    
-        $('#mask').fadeTo("slow",0.8);  
-      
-        //Get the window height and width
-        var winH = $(window).height();
-        var winW = $(window).width();
-            
-        //Set the popup window to center
-        $(id).css('top',  winH/2-$(id).height()/2);
-        $(id).css('left', winW/2-$(id).width()/2);
-      
-        //transition effect
-        $(id).fadeIn(2000); 
-    });
-     
-    //if close button is clicked
-    $('.window .close').click(function (e) {
-        //Cancel the link behavior
-        e.preventDefault();
-         
-        $('#mask').hide();
-        $('.window').hide();
-    });     
-     
-    //if mask is clicked
-    $('#mask').click(function () {
-        $(this).hide();
-        $('.window').hide();
-    });*/        
  
     $(window).resize(function () {
       
@@ -675,6 +612,17 @@ function refreshdata() {
     if($("#event_table").find("tr").size() > 1) {
       $("#event_table").tablesorter();
     }
+}
+
+// Refreshes information on the subscription modal dialog to match our summary lables
+function refreshSubscription() {
+    $('#minDepthSubscribe').html($('#minDepthLabel').html())
+    $('#maxDepthSubscribe').html($('#maxDepthLabel').html())
+    $('#minMagSubscribe').html($('#minMagLabel').html())
+    $('#maxMagSubscribe').html($('#maxMagLabel').html())
+    $('#minDevSubscribe').html($('#minDevLabel').html())
+    $('#maxDevSubscribe').html($('#maxDevLabel').html())
+    $('#sourceSubscribe').html('All sources')
 }
 
 //code that adds a marker to Google Maps
@@ -761,11 +709,72 @@ function verifyEmail() {
   var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   
   if(re.test($('input[name=email]').val())) {
-    $('span[id=emailOK]').html('<a class="btn btn-small btn-success"><i class="icon-ok icon-white"></i></a>');
-    return true;
+    $('#emailOK').html('<i class="icon-ok icon-white"></i>')
+    $('#emailOK').css('background-color', 'green')
+    $('#subscribeButton').prop('disabled', false)
+    return true
   } else {
-    $('span[id=emailOK]').html('<a class="btn btn-small btn-danger"><i class="icon-remove icon-white"></i></a>');
-    return false;
+    $('#emailOK').html('<i class="icon-remove icon-white"></i>')
+    $('#emailOK').css('background-color', 'darkred')
+    $('#subscribeButton').prop('disabled', true)
+    return false
+  }
+}
+
+// save subscription information on server
+function subscribe() {
+  // If it's not verified, we can return, as verifyEmail is a requirement
+  // of the button even being enabled.
+  if (verifyEmail()) {
+    $('#subscribeButton').prop('disabled', true)
+    $('input[name=email]').prop('readonly', 'readonly')
+    $('input[name=digest]').prop('disabled', true)
+
+    var http = new XMLHttpRequest();
+    var url = "<%= url('/subscribe') %>";
+    var params = "email=" + $('input[name=email]').val() +
+        "&mindepth=" + $('#minDepthSubscribe').text() +
+        "&maxdepth=" + $('#maxDepthSubscribe').text() +
+        "&minmag=" + $('#minMagSubscribe').text() +
+        "&maxmag=" + $('#maxMagSubscribe').text() +
+        "&mindev=" + $('#minDevSubscribe').text() +
+        "&maxdev=" + $('#maxDevSubscribe').text() +
+        "&source=" + sources[$('#sourceSubscribe').text()] +
+        "&digest=" + ($('input[name=digest]')=='true'?'true':'false')
+    
+    http.open("POST", url, true);
+    
+    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    http.onreadystatechange = function() {//Call a function when the state changes.
+        if(http.readyState == 4 && http.status == 200) {
+            if (http.responseText == "SUBSCRIPTION ADDED" || http.responseText == "SUBSCRIPTION UPDATED") {
+                // subscription accepted
+                if (http.responseText == "SUBSCRIPTION ADDED") {
+                    $('#subscriptionResultText').html('<div class="success"><h4>Subscription successfully added.</h4></div>');
+                } else if (http.responseText == "SUBSCRIPTION UPDATED") {
+                    $('#subscriptionResultText').html('<div class="success"><h4>Subscription successfully updated.</h4></div>');
+                }
+                $('#subscriptionResult').fadeIn('fast')
+                setTimeout(function() {
+                    $('#subscriptionResultText').html()
+                    $('#subscriptionResult').fadeOut('fast')
+                }, 1500)
+                setTimeout(function() {
+                    $('#subscriptionModal').modal('hide')
+                },2000)
+            } else {
+                $('#subscriptionResultText').html('<span class="failure">' + http.responseText + '</span>')
+                $('#subscriptionResult').fadeIn('fast')
+            }
+            
+            // Regradless of succcess or failure, we want to enable the button and make things rw again
+            $('#subscribeButton').prop('disabled', false)
+            $('input[name=email]').removeProp('readonly');
+            $('input[name=digest]').prop('disabled', false)
+        }
+    }
+    http.send(params);
   }
 }
 

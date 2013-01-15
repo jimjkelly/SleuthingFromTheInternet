@@ -262,24 +262,13 @@ Super-hacky, but hey.
     margin-bottom: 0;
 }
 
-/* Fix for "Deviation from Hour" not fitting in dt due to Twitter
-  Bootstrap making this fixed width */
-#subscriptionSettings dt {
-    width:  160px;
-}
-
-#subscriptionSettings dd {
-    margin-left: 170px;
-}
-
-#subscriptionResult {
-    text-align: center;
-}
-
-#subscriptionResult .error {
-    color: red;
-}
 
 /* override Twitter Bootstrap's default title and position for popovers */
 .popover { top: -20px !important; background: silver;}
 .popover-title { display: none; }
+
+/* move the emailOK button up a bit */
+#emailOK { color: white;}
+
+.success { color: green; text-align: center;}
+.failure { color: red; text-align: center;}

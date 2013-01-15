@@ -2,6 +2,7 @@
 $:.unshift File.dirname(__FILE__)
 require 'sinatra'
 require 'sinatra/activerecord'
+require 'securerandom'
 require 'db/models'
 require 'logger'
 require 'rubygems'
