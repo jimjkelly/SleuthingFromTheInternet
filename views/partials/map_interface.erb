@@ -191,6 +191,11 @@ function ready() {
         $('#min' + controlType + 'Label').html(parseInt(data.values.min))
         refreshdata()
     });
+
+    // This will only exist in the rendered HTML if we set a value to alert serverside
+    if ($('#alertModal')) {
+        $('#alertModal').modal('show')
+    }
 }
 
 function addSliderPopover(controller) {
@@ -265,11 +270,6 @@ function addSliderPopover(controller) {
             $(this).popover('destroy')
         }
     })
-    
-    // This will only exist in the rendered HTML if we set a value to alert serverside
-    if ($('#alertModal')) {
-        $('#alertModal').modal('show')
-    }
 }
 
 // deconstructs our controller switch ids to get the type
@@ -403,7 +403,7 @@ function init() {
 	  
 	  //get the data	
 	  $.getJSON(json_src, function(data) {
-	    sources[0] = "N/A";
+	    sources[0] = "All";
 	    //process it once we have it
 	    $.each(data, function(key, val) {
 	      if(val.events.mag>dataMaxMag) dataMaxMag = val.events.mag;
