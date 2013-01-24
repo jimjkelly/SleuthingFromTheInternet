@@ -266,6 +266,7 @@ Super-hacky, but hey.
 /* override Twitter Bootstrap's default title and position for popovers */
 .popover { top: -20px !important; background: silver;}
 .popover-title { display: none; }
+.arrow { border-top-color: silver !important;}
 
 /* move the emailOK button up a bit */
 #emailOK { color: white;}

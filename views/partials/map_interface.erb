@@ -154,6 +154,7 @@ function ready() {
 
     // add permalink popover - it'd be nice to maybe get this integrated
     // with our addSliderPopover, without the slider part obviously, somehow.
+    // TODO: Genericize this functionality, because we now have it in 3 places.
     $('#showPermalink').click(function() {
         if ($(this).toggleClass('active').hasClass('active')) {
             // remove the active tooltip (will be re-enabled on close)
@@ -183,14 +184,58 @@ function ready() {
             $(this).popover('destroy')
         }
     })
+    
+    $('#showSourceControl').click(function() {
+        if ($(this).toggleClass('active').hasClass('active')) {
+            $(this).tooltip('disable')
+            $('.tooltip').remove()
+
+            // kill any existing control popovers
+            $('.switch').each(function() {
+                if ((this.id != 'showSourceControl') && $(this).hasClass('active')) {
+                    // We simulate a click because other efforts dont' seem
+                    // to work as well
+                    $(this).click()
+                }
+            })
+
+            // Create and show the popover, using the selction control
+            $(this).popover({
+                'html': true,
+                'placement':'top',
+                'content': function() {
+                    var select = $('<select id="sourceSelector"></select>')
+                    $.each(sources, function(i, v) {
+                        select.append('<option value="' + i + '">' + v + '</option>')
+                    })
+                    select.val($.inArray($('#sourceLabel').html(), sources))
+                    return select
+                },
+                'trigger':'manual'
+            })
+            $(this).popover('show')
+
+            $('.popover').width($('.popover select').width() * 1.15)
+            $('.popover').height($('.popover select').height() * 1.7)
+
+            // get alerts about values changing in the source selector
+            $('#sourceSelector').change(function() {
+                $('#sourceLabel').html(sources[$('#sourceSelector').val()])
+                refreshdata()
+            })
+        } else {
+            $(this).tooltip('enable')
+            $(this).popover('destroy')
+        }
+    })
 
     // get alerts about values change in a slider
-    $(document).on('valuesChanging', '.ui-rangeSlider', function(e, data){
+    $(document).on('valuesChanging', '.ui-rangeSlider', function(e, data) {
         var controlType = e.currentTarget.id.replace('SliderControlContainer', '')
         $('#max' + controlType + 'Label').html(parseInt(data.values.max))
         $('#min' + controlType + 'Label').html(parseInt(data.values.min))
         refreshdata()
-    });
+    })
 
     // This will only exist in the rendered HTML if we set a value to alert serverside
     if ($('#alertModal')) {
@@ -403,7 +448,7 @@ function init() {
 	  
 	  //get the data	
 	  $.getJSON(json_src, function(data) {
-	    sources[0] = "All";
+	    sources[0] = "All Sources";
 	    //process it once we have it
 	    $.each(data, function(key, val) {
 	      if(val.events.mag>dataMaxMag) dataMaxMag = val.events.mag;
@@ -417,20 +462,15 @@ function init() {
 	    });
 
 	    $('#maxDepthLabel').html(Math.ceil(dataMaxDepth))
-        $('#maxMagLabel').html(Math.ceil(dataMaxMag));
-	    $('#maxDevLabel').html("30");
-      
-        // TODO: handle a seourceselect, uh, selector.
-	    for(var i in sources) {
-			document.getElementById("sourceSelect").options[i] = new Option(sources[i],[i]);            
-	    }
-	    
+        $('#maxMagLabel').html(Math.ceil(dataMaxMag))
+	    $('#maxDevLabel').html('30')
+        $('#sourceLabel').html('All Sources')
+
 	    refreshdata();
 
         //if we have URL variables, then update UI based on them
         url_vars = getUrlVars();
         if (url_vars['maxdepth']) {
-            console.log('ohai: ' + url_vars['maxdepth'])
             $('#maxDepthLabel').html(Math.ceil(url_vars['maxdepth']))
         }
         if (url_vars['mindepth']) {
@@ -449,14 +489,14 @@ function init() {
             $('#minDevLabel').html(Math.floor(url_vars['mindev']))
         }
         if(url_vars["src"]) {
-          document.getElementById("sourceSelect").value = url_vars["src"];
+          $("#sourceLabel").html(sources[url_vars["src"]])
         }
         if(url_vars["zm"]) {
-          map.setZoom(parseInt(url_vars["zm"]));      
+          map.setZoom(parseInt(url_vars["zm"]))   
         }
         if(url_vars["ll"]) {
           var ll = url_vars["ll"].split(",");
-          map.panTo(new google.maps.LatLng(ll[0],ll[1]));
+          map.panTo(new google.maps.LatLng(ll[0],ll[1]))
         }
 
         // TODO: handle error state better
@@ -538,10 +578,7 @@ function refreshdata() {
     maxMag = parseInt($('#maxMagLabel').html())
     minDev = parseInt($('#minDevLabel').html())
     maxDev = parseInt($('#maxDevLabel').html())
-
-    // TODO: still need to work on that source select thing
-    //sourceLimit = document.getElementById("sourceSelect").value;
-    sourceLimit = ""
+    sourceLimit = $.inArray($('#sourceLabel').html(), sources)
 
     // here we need to iterate through markers and get turn on ones in the
     // view criteria
@@ -622,7 +659,7 @@ function refreshSubscription() {
     $('#maxMagSubscribe').html($('#maxMagLabel').html())
     $('#minDevSubscribe').html($('#minDevLabel').html())
     $('#maxDevSubscribe').html($('#maxDevLabel').html())
-    $('#sourceSubscribe').html('All sources')
+    $('#sourceSubscribe').html($.inArray($('#sourceLabel').html(), sources))
 }
 
 //code that adds a marker to Google Maps
