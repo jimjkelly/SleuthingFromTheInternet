@@ -14,8 +14,12 @@
                 allowing you to specify criteria of interest and be notified of
                 matching events immediately.  Please feel<br />
                 free to click the icons below to change the
-                settings, and click subscribe to sign up or modify your<br />
-                notifications.
+                settings, and click subscribe (
+                <a href="#subscriptionModal" title="Subscribe to events with these settings" data-toggle="modal" onclick="refreshSubscription()">
+                        <i class="icon-envelope-alt"></i>
+                </a> ) 
+                to sign up to start receiving<br /> 
+                email notifications of matching events, or modify your notifications.
         </p>
         <p>
                 inspired by: The Arms Control Wonk <a href="https://twitter.com/ArmsControlWonk"><i class="icon-twitter"></i></a>, Jeffrey Lewis's post, <b><a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">My Own Sleuthing From Home</a></b><br />
@@ -33,11 +37,17 @@
                 </a> - 
                 <span id="minDepthLabel">0</span> - 
                 <span id="maxDepthLabel"></span> km 
+                <sup>
+                        <a href="#" rel="tooltip" onclick="$('#footnote1').modal('show')" title="A note on depth normalization">[1]</a>
+                </sup>
                 <a href="#" rel="tooltip" id="showDepthControl" class="slider-control switch" title="Modify depth threshold">
                         <i class="icon-circle-arrow-down"></i>
                 </a> 
                 <span id="minMagLabel">0</span> - 
                 <span id="maxMagLabel"></span> Mag. 
+                <sup>
+                        <a href="#" rel="tooltip" onclick="$('#footnote2').modal('show')" title="A note on magnitude normalization">[2]</a>
+                </sup>
                 <a href="#" rel="tooltip" id="showMagControl" class="slider-control switch" title="Modify magnitude threshold">
                         <i class="icon-bolt"></i>
                 </a> 
@@ -73,9 +83,9 @@
         Limit to Source: <select id="sourceSelect" onchange="refreshdata()"></select><br/>
 </div>
 
-<div id="subscriptionModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="subscriptionModal" class="modal hide fade" tabindex="-1" role="dialog">
         <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <button type="button" class="close" data-dismiss="modal">×</button>
                 <h3 id="myModalLabel">Subscribe to Email Notifications</h3>
         </div>
         <div class="modal-body">
@@ -129,19 +139,43 @@
                 </div>
         </div>
         <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-                <button id="subscribeButton" class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="subscribe()" disabled>Subscribe</button>
+                <button class="btn" data-dismiss="modal">Close</button>
+                <button id="subscribeButton" class="btn btn-primary" data-dismiss="modal" onclick="subscribe()" disabled>Subscribe</button>
         </div>
 </div>
 
 <!-- This is a generic alert modal that will be displayed at page start to the user if a value has been assigned serverside. -->
 <% if defined?(alert) %>
-        <div id="alertModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div id="alertModal" class="modal hide fade" tabindex="-1" role="dialog">
                 <div class="modal-body">
                         <%= alert %>
                 </div>
                 <div class="modal-footer">
-                        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                        <button class="btn" data-dismiss="modal">Close</button>
                 </div>
         </div>
 <% end %>
+
+<!-- Below are footnote modals that can be displayed by clicking footnote links elsewhere on the page -->
+<div id="footnote1" class="modal hide fade" tabindex="-1" role="dialog">
+        <div class="modal-header">
+                A Quick Note on the Depth Listed for Events
+        </div>
+        <div class="modal-body">
+                Some events are listed simply as "shallow", in which case we take the liberty of setting them to zero in our database.  We suggest you take care special care to look at the source data for any event listed as depth zero to determine more about it.
+        </div>
+        <div class="modal-footer">
+                <button class="btn" data-dismiss="modal">Close</button>
+        </div>
+</div>                
+<div id="footnote2" class="modal hide fade" tabindex="-1" role="dialog">
+        <div class="modal-header">
+                A Quick Note on the Magnitudes Listed for Events
+        </div>
+        <div class="modal-body">
+                We use various regional seismic networks as sources for our data, and unfortunately this means that while we simply say "magnitude" and call it a day, this sort of masks some of the nuances of the different magnitude scales in use today.  For our purposes, we feel these differences aren't necessarily large enough to prevent us from using them as is for filtering.  But you should be aware of this issue and consider it when interpreting event data.  You can learn more about this issue in the very informative, "Understanding the Differences between Three Teleseismic mb Scales" originally published in <em>Bulletin of Atomic Scientists</em>, Vol. 95, No. 5.
+        </div>
+        <div class="modal-footer">
+                <button class="btn" data-dismiss="modal">Close</button>
+        </div>
+</div>
