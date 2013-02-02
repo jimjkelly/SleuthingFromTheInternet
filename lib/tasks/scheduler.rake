@@ -45,6 +45,7 @@ in db/models.rb or more specifically the migrations in db/migrations
 desc "This task is called by the Heroku scheduler add-on to update Events"
 task :update_events => :environment do
     puts "Updating events..."
+
     ['update_usgs', 'update_isc', 'update_fnet'].each do |source|
         begin
             Rake::Task[source].invoke
@@ -64,13 +65,17 @@ task :update_usgs => :environment do
   usgsEvents = JSON.parse(open("http://earthquake.usgs.gov/earthquakes/feed/geojson/all/hour").read)
 
   usgsEvents['features'].each do |usgsEvent|
-    AddEvent(Time.at(usgsEvent['properties']['time']),
+    # Note that we limit our epoch time to 10 characters, for some reason
+    # USGS pads an extra 3 zeros at the end and it messes things up.
+    AddEvent(Time.at(usgsEvent['properties']['time'][0...10].to_i).utc,
              usgsEvent['geometry']['coordinates'][1],
              usgsEvent['geometry']['coordinates'][0],
              usgsEvent['geometry']['coordinates'][2],
              usgsEvent['properties']['mag'],
-             usgsEvent['properties']['url'],
+             usgsEvent['properties']['url'].gsub('http://earthquake.usgs.gov', ''),
              'earthquake.usgs.gov')
+    # Note that we removed the server name there because we take the source and prepend it
+    # at display time
   end
   puts " done."
 end
@@ -84,7 +89,7 @@ task :update_isc => :environment do
     end
       
     iscPage.xpath('//tr[starts-with(@class, "DataRow")]').each { |row|
-        time = Time.parse(row.children[2].text).utc
+        time = Time.parse(row.children[2].text + ' UTC')
         latitude = row.children[4].text
         longitude = row.children[6].text
         
@@ -110,7 +115,7 @@ task :update_fnet => :environment do
     end
     
     fnetPage.xpath('//tr[@class="joho_bg3"]').each { |row|
-        time = Time.parse(row.children[0].text)
+        time = Time.parse(row.children[0].text + ' UTC')
         latitude = row.children[1].text
         longitude = row.children[2].text
         depth = row.children[3].text
@@ -137,8 +142,8 @@ def AddEvent(time, latitude, longitude, depth, mag, url, source)
         depth = depth.to_s.gsub(/[^0-9.]/, '')
     end
     
-    latitude = latitude.to_s.gsub(/[^0-9.]/, '')
-    longitude = longitude.to_s.gsub(/[^0-9.]/, '')
+    latitude = latitude.to_s.gsub(/[^0-9.\-]/, '')
+    longitude = longitude.to_s.gsub(/[^0-9.\-]/, '')
     
     unless Events.exists?(:url => url) # URLs should be unique
         Events.create(:mag => mag,

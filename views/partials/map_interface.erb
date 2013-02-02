@@ -620,12 +620,16 @@ function refreshdata() {
             bounced = true
         }
 
-        if(sourceLimit>0) { if(markerInfo[i].source != sources[sourceLimit]) bounced = true; }
+        // sourceLimit == 0 means "All Sources" is selected.  If that's not,
+        // ensure that the source is equal
+        if(sourceLimit>0) { 
+            if(markerInfo[i].source != sources[sourceLimit]) 
+                bounced = true 
+        }
 
         // TODO: reconcile these refreshes of the old-style events with our new event viewer      
         if (bounced) {
             markers[i].setVisible(false);
-            debugger;
             $("#event"+i).hide();
         } else {
             markers[i].setVisible(true);
@@ -637,6 +641,7 @@ function refreshdata() {
     //udpate the permalink
     $('#showPermalink').prop('permalink', [location.protocol, '//', location.host, location.pathname].join('') + '?maxdepth=' + maxDepth + '&mindepth=' + minDepth + '&maxmag=' + maxMag + '&minmag=' + minMag + '&maxdev=' + maxDev + '&mindev=' + minDev + '&src=' + sourceLimit + '&ll=' + map.getCenter().toUrlValue() + '&zm=' + map.getZoom())
  
+    // TODO: should this be here?
     $(window).resize(function () {
       
         var box = $('#boxes .window');
@@ -679,8 +684,8 @@ function refreshSubscription() {
 
 //code that adds a marker to Google Maps
 function addMarker(lat,lng,d,size) {
-    var dateObj = new Date(0);
-    dateObj.setUTCMilliseconds(Date.parse(d.time));
+    var dateObj = new Date(0)
+    dateObj = getDateFromTime(d.time)
     
     markers.push(new google.maps.Marker({
       position: new google.maps.LatLng(lat,lng),
@@ -698,7 +703,7 @@ function addMarker(lat,lng,d,size) {
         var detail = "";
         detail+= "<span class='detailinfo'>Source:</span> <a href='http://" + d.source + d.url + "' target='_blank'>"+d.source+"</a><br>";
         detail+= "<span class='detailinfo'>Lat/Lng:</span> <a href='http://maps.google.com/maps?t=h&q=loc:"+ d.latitude +","+d.longitude+"&z=8' target='_blank'>" + d.latitude + ", " + d.longitude+"</a><br>";
-        detail+= "<span class='detailinfo'>Date/time:</span> " + dateObj.toGMTString() + "<br>";
+        detail+= "<span class='detailinfo'>Date/Time:</span> " + dateObj.toGMTString() + "<br>";
         detail+=" <span class='detailinfo'>Deviation from hour: </span>";
   
         if((60-dateObj.getMinutes())<dateObj.getMinutes()) {

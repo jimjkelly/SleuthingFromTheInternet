@@ -25,7 +25,9 @@
                 inspired by: The Arms Control Wonk <a href="https://twitter.com/ArmsControlWonk"><i class="icon-twitter"></i></a>, Jeffrey Lewis's post, <b><a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">My Own Sleuthing From Home</a></b><br />
                 writen by: Alex Wellerstein <a href="http://twitter.com/wellerstein"><i class="icon-twitter"></i></a> and Jim Kelly <a href="http://twitter.com/pthread"><i class="icon-twitter"></i></a><br />
                 source: GitHub <a href="https://github.com/jimjkelly/SleuthingFromTheInternet"><i class="icon-github"></i></a><br />
-                powered by: Heroku <a href="http://www.heroku.com"><i class="icon-cloud"></i></a>
+                powered by: Heroku <a href="http://www.heroku.com"><i class="icon-cloud"></i></a><br />
+                consume: Events data, in html or json format <%= link(url('/events'), '<i class="icon-rss"></i>') %> 
+
         </p>
 </div>
 
@@ -39,7 +41,7 @@
                 <span id="maxDepthLabel"></span> km 
                 <sup>
                         <!-- TODO: tooltips for footnotes are smashed -->
-                        <a href="#" rel="tooltip" onclick="$('#footnote1').modal('show')" title="A note on depth normalization">[1]</a>
+                        <a href="#" onclick="$('#footnote1').modal('show')" title="A note on depth normalization">[1]</a>
                 </sup>
                 <a href="#" rel="tooltip" id="showDepthControl" class="slider-control switch" title="Modify depth threshold">
                         <i class="icon-circle-arrow-down"></i>
@@ -48,7 +50,7 @@
                 <span id="maxMagLabel"></span> Mag. 
                 <sup>
                         <!-- TODO: tooltips for footnotes are smashed -->
-                        <a href="#" rel="tooltip" onclick="$('#footnote2').modal('show')" title="A note on magnitude normalization">[2]</a>
+                        <a href="#" onclick="$('#footnote2').modal('show')" title="A note on magnitude normalization">[2]</a>
                 </sup>
                 <a href="#" rel="tooltip" id="showMagControl" class="slider-control switch" title="Modify magnitude threshold">
                         <i class="icon-bolt"></i>
