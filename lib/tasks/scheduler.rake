@@ -46,7 +46,7 @@ desc "This task is called by the Heroku scheduler add-on to update Events"
 task :update_events => :environment do
     puts "Updating events..."
 
-    ['update_usgs', 'update_isc', 'update_fnet'].each do |source|
+    ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam'].each do |source|
         begin
             Rake::Task[source].invoke
         rescue
@@ -130,6 +130,43 @@ task :update_fnet => :environment do
     
     puts " done."
 end
+
+task :update_kigam => :environment do
+  print "Updating from KIGAM..."
+  STDOUT.flush
+
+  kigamPage = Nokogiri::HTML(open('http://quake.kigam.re.kr/pds/db/list.html').read) do |config|
+    config.strict.nonet
+  end
+
+  #kigamPage.xpath("//a[starts-with(@href, 'read_ok.php')]").each { |row|
+  kigamPage.xpath("//a[starts-with(@href, 'read_ok.php')]").to_a.map { |i| i['href'] }.uniq.each { |url|
+    url = '/pds/db/' + url
+
+    # Because we need to make a second call to get more data, we check
+    # to see if we've seen this or not first
+    unless Events.exists?(:url => url)
+      kigamRedirectPage = Nokogiri::HTML(open('http://quake.kigam.re.kr' + url).read) do |config|
+        config.strict.nonet
+      end
+
+      kigamRedirectedURL = kigamRedirectPage.at_xpath('//script').to_s.gsub("<script>document.location.replace('", '').gsub("');</script>", "")
+
+      kigamEventPage = Nokogiri::HTML(open('http://quake.kigam.re.kr/pds/db/' + kigamRedirectedURL).read) do |config|
+        config.strict.nonet
+      end
+      kigamEventsData = kigamEventPage.xpath("//td[@bgcolor='#F0F0F0']").children
+      puts 'OMG TIME: ' + kigamEventsData[1].text.strip
+      time = Time.parse(kigamEventsData[0].text.strip + ' ' + kigamEventsData[1].text.strip.gsub('\..*', '') + ' UTC')
+      latitude = kigamEventsData[2].text.strip
+      longitude = kigamEventsData[3].text.strip
+      magnitude = kigamEventsData[4].text.strip
+      depth = kigamEventsData[5].text.strip
+      
+      AddEvent(time, latitude, longitude, depth, magnitude, url, 'quake.kigam.re.kr')
+    end
+  }
+end  
 
 # Time should be a Time utc object
 def AddEvent(time, latitude, longitude, depth, mag, url, source)
