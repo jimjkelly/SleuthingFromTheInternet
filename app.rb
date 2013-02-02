@@ -5,26 +5,6 @@ set :show_exceptions, false
 
 GENERIC_ERROR = 'An error encountered.  Please try again later or open a ticket on <a href="https://github.com/jimjkelly/SleuthingFromTheInternet/issues">GitHub</a>, and reference this code: '
 
-configure :development do
-  enable :logging, :dump_errors
-  set :logging, Logger::DEBUG
-  set :raise_errors, true
-  set :database, 'sqlite:///db/development.db'
-end
-
-configure :production do
-  db = URI.parse(ENV['SHARED_DATABASE_URL'] || 'postgres://localhost/mydb')
-
-  ActiveRecord::Base.establish_connection(
-    :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
-    :host     => db.host,
-    :username => db.user,
-    :password => db.password,
-    :database => db.path[1..-1],
-    :encoding => 'utf8'
-  )
-end
-
 error do
   e = request.env['sinatra.error']
   puts e.to_s
