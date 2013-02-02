@@ -3,6 +3,28 @@ require File.dirname(__FILE__) + '/environment.rb'
 set :raise_errors, false
 set :show_exceptions, false
 
+GENERIC_ERROR = 'An error encountered.  Please try again later or open a ticket on <a href="https://github.com/jimjkelly/SleuthingFromTheInternet/issues">GitHub</a>, and reference this code: '
+
+configure :development do
+  enable :logging, :dump_errors
+  set :logging, Logger::DEBUG
+  set :raise_errors, true
+  set :database, 'sqlite:///db/development.db'
+end
+
+configure :production do
+  db = URI.parse(ENV['SHARED_DATABASE_URL'] || 'postgres://localhost/mydb')
+
+  ActiveRecord::Base.establish_connection(
+    :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
+    :host     => db.host,
+    :username => db.user,
+    :password => db.password,
+    :database => db.path[1..-1],
+    :encoding => 'utf8'
+  )
+end
+
 error do
   e = request.env['sinatra.error']
   puts e.to_s
@@ -23,6 +45,16 @@ helpers do
   
   def url(path = '')
     "#{scheme ||= 'http'}://#{host}#{path}"
+  end
+
+  def error(location='UNKNOWN', text=GENERIC_ERROR)
+    # A semi-random code to allow us to correlate
+    # dumped logs to error reporting, should a user
+    # pass along the code
+    code = SecureRandom.hex(4)
+    puts "Exception in " + location + ", error code: " + code + "\n"
+
+    return text + "(" + location + ": " + code + ")"
   end
 end
 
@@ -60,40 +92,44 @@ end
 
 post '/subscribe' do
   begin
+    sent_values = {:email => params[:email],
+      :mindepth => params[:mindepth],
+      :maxdepth => params[:maxdepth],
+      :minmag => params[:minmag],
+      :maxmag => params[:maxmag],
+      :mindev => params[:mindev],
+      :maxdev => params[:maxdev],
+      :source => params[:source],
+      :digest => params[:digest]
+    }
+
     if Subscribers.exists?(:email => params[:email])
       #require 'ruby-debug/debugger' 
       Subscribers.update(Subscribers.find(:first, :conditions => ['email = ?', params[:email]]),
-                         {:depth => params[:depth],
-                          :mag => params[:mag],
-                          :time_deviation => params[:deviation],
-                          :source => params[:source],
-                          :digest => params[:digest]
-                        })
+                         sent_values)
       'SUBSCRIPTION UPDATED'
     else
-      Subscribers.create(:email => params[:email],
-                         :depth => params[:depth],
-                         :mag   => params[:mag],
-                         :time_deviation => params[:deviation],
-                         :source => params[:source],
-                         :digest => params[:digest])
+      Subscribers.create(sent_values)
       'SUBSCRIPTION ADDED'
     end
   rescue => e
     puts e.to_s
     puts e.backtrace.join("\n")
-    'Generic error encountered.  Please try again later or open a ticket on <a href="https://github.com/jimjkelly/SleuthingFromTheInternet/issues">GitHub</a>'
+    error('SUBSCRIBE')
   end
 end
 
-get '/unsubscribe' do
+get '/unsubscribe/:email' do
   begin
     if Subscribers.exists?(:email => params[:email])
-      Subscribers.destroy_all('email = ?', params[:email])
+      Subscribers.destroy_all(:email => params[:email])
+      erb :index, :locals => { :alert => 'Your unsubscription request has been processed, and you will recieve no further email communications from us to ' + params[:email] + '.' }
+    else
+      erb :index, :locals => { :alert => 'We\'re sorry, but we cannot find a record of ' + params[:email] + ' being subscribed.  If you think this is an error, please open an issue on <a href="https://github.com/jimjkelly/SleuthingFromTheInternet/issues">GitHub</a> and we will look into it as soon as possible.'}
     end
   rescue => e
     puts e.to_s
     puts e.backtrace.join("\n")
-    erb :unsubscribe
+    error('UNSUBSCRIBE')
   end
 end

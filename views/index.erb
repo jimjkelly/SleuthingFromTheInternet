@@ -1,5 +1,185 @@
-          <div class="span12 offset1">
-                <p>Sleuthing from the Internet seeks to make the job of monitoring seismic data to detect things that go boom much easier.  Below is a list of the 500 most recent events (view <a href="<%= url('/events') %>">see all</a>).  Use the sliders to change view criteria, and hit subscribe to receive notifications about new events that occur matching your selected criteria.</p>
-                <br>
-                <%= erb :'partials/map_interface' %>
-          </div>
+<%= erb :'partials/map_interface' %>
+
+<header class="shadow">
+        <h1><%= link(url('/'), 'Sleuthing from the Internet') %></h1>
+        <p>aggregating seismic data so you don't have to</p>
+        <a id="showAbout" href="#">&nbsp;<i class="icon-info-sign icon-white"></i> About <i id="aboutCaret" class="icon-caret-up icon-white"></i></a>
+        <div id="release" class="shadow">BETA</div>
+</header>
+
+<div id="about" class="shadow panel">
+        <p>
+                Sleuthing from the Internet monitors the seismic data generated
+                by regional networks around the world,<br />
+                allowing you to specify criteria of interest and be notified of
+                matching events immediately.  Please feel<br />
+                free to click the icons below to change the
+                settings, and click subscribe (
+                <a href="#subscriptionModal" title="Subscribe to events with these settings" data-toggle="modal" onclick="refreshSubscription()">
+                        <i class="icon-envelope-alt"></i>
+                </a> ) 
+                to sign up to start receiving<br /> 
+                email notifications of matching events, or modify your notifications.
+        </p>
+        <p>
+                inspired by: The Arms Control Wonk <a href="https://twitter.com/ArmsControlWonk"><i class="icon-twitter"></i></a>, Jeffrey Lewis's post, <b><a href="http://lewis.armscontrolwonk.com/archive/5534/my-own-sleuthing-from-home">My Own Sleuthing From Home</a></b><br />
+                writen by: Alex Wellerstein <a href="http://twitter.com/wellerstein"><i class="icon-twitter"></i></a> and Jim Kelly <a href="http://twitter.com/pthread"><i class="icon-twitter"></i></a><br />
+                source: GitHub <a href="https://github.com/jimjkelly/SleuthingFromTheInternet"><i class="icon-github"></i></a><br />
+                powered by: Heroku <a href="http://www.heroku.com"><i class="icon-cloud"></i></a><br />
+                consume: Events data, in html or json format <%= link(url('/events'), '<i class="icon-rss"></i>') %> 
+
+        </p>
+</div>
+
+<div id="summary" class="panel">
+        <p>
+                <span id="eventsNum"></span> 
+                <a href="#" rel="tooltip" id="showEvents" title="Show list of currently selected events">
+                        <i class="icon-list-ul"></i>&nbsp;<i id="eventsCaret" class="icon-caret-up icon-white"></i>
+                </a> - 
+                <span id="minDepthLabel">0</span> - 
+                <span id="maxDepthLabel"></span> km 
+                <sup>
+                        <!-- TODO: tooltips for footnotes are smashed -->
+                        <a href="#" onclick="$('#footnote1').modal('show')" title="A note on depth normalization">[1]</a>
+                </sup>
+                <a href="#" rel="tooltip" id="showDepthControl" class="slider-control switch" title="Modify depth threshold">
+                        <i class="icon-circle-arrow-down"></i>
+                </a> 
+                <span id="minMagLabel">0</span> - 
+                <span id="maxMagLabel"></span> Mag. 
+                <sup>
+                        <!-- TODO: tooltips for footnotes are smashed -->
+                        <a href="#" onclick="$('#footnote2').modal('show')" title="A note on magnitude normalization">[2]</a>
+                </sup>
+                <a href="#" rel="tooltip" id="showMagControl" class="slider-control switch" title="Modify magnitude threshold">
+                        <i class="icon-bolt"></i>
+                </a> 
+                <span id="minDevLabel">0</span> - 
+                <span id="maxDevLabel"></span> Min. 
+                <a href="#" rel="tooltip" id="showDevControl" class="slider-control switch" title="Modify minimum deviation from hour threshold">
+                        <i class="icon-time"></i>
+                </a> 
+                <span id="sourceLabel">All Sources</span> 
+                <a href="#" rel="tooltip" id="showSourceControl" class="switch" title="Select data source">
+                        <i class="icon-filter"></i>
+                </a> - 
+                <a href="#" id="showPermalink" class="switch" title="Permanent link to the chosen settings">
+                        <i class="icon-link"></i>
+                </a> - 
+                <a href="#subscriptionModal" title="Subscribe to events with these settings" data-toggle="modal" onclick="refreshSubscription()">
+                        <i class="icon-envelope-alt"></i>
+                </a>
+        </p>
+</div>
+
+<div id="events" class="panel">
+        <span id="events-arrow-left" class="events-arrow"><i class="icon-chevron-left icon-large"></i></span>
+        <span id="events-area">&nbsp;</span>
+        <span id="events-arrow-right" class="events-arrow"><i class="icon-chevron-right icon-large"></i></span>
+</div>
+
+<!-- This can't be deleted until we add it elsewhere, as it is referenced for populating our js list of sources -->
+<div id="control" style="display:none;">
+        <div class="span8 control-slider"><span>Max Depth:  <input type="text" class="input-mini" id="maxDepth" onchange="$('#rangeDepth').slider('value',this.value);refreshdata();"/></span><span class="span3 control-slider" id="rangeDepth"></span></div>
+        <div>Max Magnitude: <input type="text" class="input-mini" id="maxMag" onchange="$('#rangeMag').slider('value',this.value);refreshdata();"/><span id="rangeMag"></span> </div>
+        <div>Deviation from Hour: <input type="text" class="input-mini" id="minDev" value="30" onchange="$('#rangeDev').slider('value',this.value);refreshdata();" /><span id="rangeDev"></span> </div>
+        Limit to Source: <select id="sourceSelect" onchange="refreshdata()"></select><br/>
+</div>
+
+<div id="subscriptionModal" class="modal hide fade" tabindex="-1" role="dialog">
+        <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h3 id="myModalLabel">Subscribe to Email Notifications</h3>
+        </div>
+        <div class="modal-body">
+                <p>Enter an email address to receive email alerts when new events are seen matching the criteria below.</p>
+                <br />
+                <p>Current Settings:</p>
+                <div id="subscriptionSettings">
+                        <dl class="dl-horizontal">
+                                <div class="row">
+                                        <dt>Depth:</dt>
+                                        <dd><span id="minDepthSubscribe"></span> - <span id="maxDepthSubscribe"></span> km</dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Max Magnitude:</dt>
+                                        <dd><span id="minMagSubscribe"></span> - <span id="maxMagSubscribe"></span> Magnitude</dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Deviation from Hour:</dt>
+                                        <dd><span id="minDevSubscribe"></span> - <span id="maxDevSubscribe"></span> Minutes</dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Limit to Source:</dt>
+                                        <dd><span id="sourceSubscribe"></span></dd>
+                                </div>
+                        </dl>
+                </div>
+                <p>Email Information:</p>
+                <div id="emailInformation">
+                        <dl class="dl-horizontal">
+                                <div class="row">
+                                        <dt>Address:</dt>
+                                        <dd>
+                                                <div class="input-append">
+                                                        <input class="span3" name="email" onblur="verifyEmail()" type="text" placeholder="your@email.com…" />
+                                                        <span id="emailOK" class="add-on"></span>
+                                                </div>
+                                        </dd>
+                                </div>
+                                <div class="row">
+                                        <dt>Digest:</dt>
+                                        <dd>
+                                                <input type="checkbox" name="digest" value="true" checked="yes" /> 
+                                                <small>uncheck to receive email alerts as events occur</small>
+                                        </dd>
+                                </div>
+                        </dl>
+                </div>
+                <div id="subscriptionResult" style="display: none;">
+                        <p>Results:</p>
+                        <div id="subscriptionResultText"></div>
+                </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn" data-dismiss="modal">Close</button>
+                <button id="subscribeButton" class="btn btn-primary" data-dismiss="modal" onclick="subscribe()" disabled>Subscribe</button>
+        </div>
+</div>
+
+<!-- This is a generic alert modal that will be displayed at page start to the user if a value has been assigned serverside. -->
+<% if defined?(alert) %>
+        <div id="alertModal" class="modal hide fade" tabindex="-1" role="dialog">
+                <div class="modal-body">
+                        <%= alert %>
+                </div>
+                <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal">Close</button>
+                </div>
+        </div>
+<% end %>
+
+<!-- Below are footnote modals that can be displayed by clicking footnote links elsewhere on the page -->
+<div id="footnote1" class="modal hide fade" tabindex="-1" role="dialog">
+        <div class="modal-header">
+                A Quick Note on the Depth Listed for Events
+        </div>
+        <div class="modal-body">
+                Some events are listed simply as "shallow", in which case we take the liberty of setting them to zero in our database.  We suggest you take care special care to look at the source data for any event listed as depth zero to determine more about it.
+        </div>
+        <div class="modal-footer">
+                <button class="btn" data-dismiss="modal">Close</button>
+        </div>
+</div>                
+<div id="footnote2" class="modal hide fade" tabindex="-1" role="dialog">
+        <div class="modal-header">
+                A Quick Note on the Magnitudes Listed for Events
+        </div>
+        <div class="modal-body">
+                We use various regional seismic networks as sources for our data, and unfortunately this means that while we simply say "magnitude" and call it a day, this sort of masks some of the nuances of the different magnitude scales in use today.  For our purposes, we feel these differences aren't necessarily large enough to prevent us from using them as is for filtering.  But you should be aware of this issue and consider it when interpreting event data.  You can learn more about this issue in the very informative, "Understanding the Differences between Three Teleseismic mb Scales" originally published in <em>Bulletin of Atomic Scientists</em>, Vol. 95, No. 5.
+        </div>
+        <div class="modal-footer">
+                <button class="btn" data-dismiss="modal">Close</button>
+        </div>
+</div>

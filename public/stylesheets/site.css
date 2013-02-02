@@ -1,17 +1,50 @@
-body {
-    background-color: silver;
+html, body, #theMap {
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
-header a:hover {
+html {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+body {
+    display: block;
+}
+
+a:hover {
     text-decoration: none;
 }
 
-header a {
+a {
     color:#005580;
 }
 
-.hero-unit {
-    position: relative;
+header {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    padding-left: 30px;
+    padding-right:160px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: #005580;
+    background-color: silver;
+    /*background-color: #EEE;*/
+    -moz-border-radius-bottomright:15px;
+    border-bottom-right-radius: 15px;
+    z-index: 1000;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 52px;
+    letter-spacing: -1px;
+}
+
+header p {
+    text-align: right;
+    float:right;
 }
 
 #release {
@@ -26,10 +59,49 @@ header a {
     color: #EEE;
 }
 
+/* Attribution Box with z-index 1000000 and 1000001
+jQuery will find the item with these z-indexes and apply the following ids.
+Super-hacky, but hey.
+*/
+#googleAttr {
+    left: auto !important;
+    bottom: auto !important;
+}
+
+#copyrightAttr {
+    left: auto !important;
+    bottom: auto !important;
+}
+
+#controls {
+    /* We have to hardcode this because Google is, like, all about Freedom man
+      except, ya know, when you want to move their crap around. */
+    top: 35px !important;
+}
+
 .shadow {
+    z-index: 999;
     -webkit-box-shadow: -3px 3px 5px black;
     -moz-box-shadow: -3px 3px 5px black;
          box-shadow: -3px 3px 5px black;
+}
+
+.transparent {
+    background: rgba(0,0,0,0.0);
+}
+
+.rotate {
+  -webkit-transform:rotate(180deg);
+  -moz-transform:rotate(180deg);
+  -o-transform:rotate(180deg);
+  /* filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=1.5); */
+  -ms-transform:rotate(180deg);        
+}
+
+#theMap {
+    position: relative;
+    overflow: hidden;
+    -webkit-transform: trasformZ(0);
 }
 
 /* Necessary to ensure images display correctly in the map */
@@ -37,13 +109,96 @@ header a {
     max-width:none;
 }
 
+.panel {
+    position: absolute;
+    background: silver;
+    padding: 30px;
+    padding-bottom: 15px;
+}
+
+#about {
+    -moz-border-radius-bottomright:15px;
+    border-bottom-right-radius: 15px;
+    position: absolute;
+    background: silver;
+    z-index: 100;
+    left: 0;
+    top: 90px;
+}
+
+#summary {
+   bottom: 0;
+   left: 0;
+    -moz-border-radius-topright:15px;
+    border-top-right-radius: 15px;
+}
+
+#summary p {
+    margin: 0;
+    padding: 0;
+}
+
+#control {
+    bottom: 0;
+    right: 0;
+    -moz-border-radius-topleft:15px;
+    border-top-left-radius: 15px;
+}
+
+#events {
+    bottom:0;
+    left: 0;
+    position: absolute;
+    width: 80%;
+    height: 150px;
+    -moz-border-radius-topright:15px;
+    border-top-right-radius: 15px;
+}
+
+#events div {
+    display: inline-block;
+    position: relative;
+    background-color: #abc;
+    width: 140px;
+    height: 140px;
+    margin: 5px;
+}
+
+#events-area {
+    display: inline-block;
+    text-align: center;
+    position: relative;
+    left:5%;
+    width:90%;
+    overflow: hidden;
+}
+
+.events-arrow {
+    display: block;
+    position: absolute;
+    height: 150px;
+    top:50%;
+    width: 5%;
+}
+
+#events-arrow-right {
+    text-align: left;
+    right:0;
+}
+
+#events-arrow-left {
+    text-align:right;
+    left:0;
+}
+
+.control-slider {
+    margin: 0;
+    display: inline-block;
+}
+
 #status a {
     text-decoration: none;
     font-weight: normal;
-}
-
-#permalink {
-    float: right;
 }
 
 #mask {
@@ -104,23 +259,17 @@ header a {
 }
 
 #subscriptionButton input {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
-/* Fix for "Deviation from Hour" not fitting in dt due to Twitter
-  Bootstrap making this fixed width */
-#subscriptionSettings dt {
-    width:  160px;
-}
 
-#subscriptionSettings dd {
-    margin-left: 170px;
-}
+/* override Twitter Bootstrap's default title and position for popovers */
+.popover { top: -20px !important; background: silver;}
+.popover-title { display: none; }
+.arrow { border-top-color: silver !important;}
 
-#subscriptionResult {
-    text-align: center;
-}
+/* move the emailOK button up a bit */
+#emailOK { color: white;}
 
-#subscriptionResult .error {
-    color: red;
-}
+.success { color: green; text-align: center;}
+.failure { color: red; text-align: center;}

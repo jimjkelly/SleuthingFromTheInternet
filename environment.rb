@@ -2,6 +2,7 @@
 $:.unshift File.dirname(__FILE__)
 require 'sinatra'
 require 'sinatra/activerecord'
+require 'securerandom'
 require 'db/models'
 require 'logger'
 require 'rubygems'
@@ -13,7 +14,7 @@ Bundler.require
 
 Time.zone = "UTC"
 ActiveRecord::Base.time_zone_aware_attributes = true
-ActiveRecord::Base.default_timezone = "UTC"
+ActiveRecord::Base.default_timezone = :utc
 
 configure :development do
   ActiveRecord::Base.establish_connection(:adapter => "sqlite3",
