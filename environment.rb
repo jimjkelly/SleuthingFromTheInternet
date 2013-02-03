@@ -4,9 +4,10 @@ require 'sinatra'
 require 'sinatra/activerecord'
 require 'securerandom'
 require 'db/models'
-require 'logger'
 require 'rubygems'
+require 'aws/ses'
 require 'bundler'
+require 'logger'
 require 'uri'
 
 Bundler.setup

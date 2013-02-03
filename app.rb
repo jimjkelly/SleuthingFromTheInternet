@@ -80,16 +80,32 @@ post '/subscribe' do
       :mindev => params[:mindev],
       :maxdev => params[:maxdev],
       :source => params[:source],
-      :digest => params[:digest]
+      :digest => params[:digest] == 'true' ? true : false
     }
 
     if Subscribers.exists?(:email => params[:email])
-      #require 'ruby-debug/debugger' 
       Subscribers.update(Subscribers.find(:first, :conditions => ['email = ?', params[:email]]),
                          sent_values)
       'SUBSCRIPTION UPDATED'
     else
       Subscribers.create(sent_values)
+      ses = AWS::SES::Base.new(
+        :access_key_id  => ENV['S3_KEY'],
+        :secret_access_key => ENV['S3_SECRET']
+      )
+
+      body = 'You are now subscribed to receive emails about events that match your selection criteria.  You can change those criteria on the site in the same way you just signed up.  Set selection criteria on the main page, then click the subscription envelope.
+
+'
+      body += 'If you would like to unsubscribe, simply click the following link: http://sleuthingfromtheinternet.com/unsubscribe/' + params[:email]
+
+      ses.send_email(
+        :to => params[:email], 
+        :from => 'Sleuthing From the Internet <do-not-reply@sleuthingfromtheinternet.com>', 
+        :subject => 'Subscription for Sleuthing From the Internet',
+        :body => body
+      )
+
       'SUBSCRIPTION ADDED'
     end
   rescue => e

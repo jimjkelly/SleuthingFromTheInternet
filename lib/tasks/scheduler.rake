@@ -1,5 +1,6 @@
 require 'open-uri'
 require 'nokogiri'
+require 'aws/ses'
 require 'json'
 
 # Set a placeholder RACK_ENV for when this is run outside the scope of rack 
@@ -46,6 +47,12 @@ desc "This task is called by the Heroku scheduler add-on to update Events"
 task :update_events => :environment do
     puts "Updating events..."
 
+    if Events.last
+      initialIndex = Events.last.id
+    else
+      initialIndex = -1
+    end
+    
     ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam'].each do |source|
         begin
             Rake::Task[source].invoke
@@ -55,6 +62,9 @@ task :update_events => :environment do
             puts $@
         end
     end
+
+    update_subscribers(initialIndex)
+
     puts "Finished."
 end
 
@@ -167,6 +177,90 @@ task :update_kigam => :environment do
     end
   }
 end  
+
+# This will look at every event we find after initial_id, and then look at people's
+# subscription settings, and email them information about new events.
+def update_subscribers(initial_id)
+  notifications = Hash.new
+
+  # Check our new events to see who should be notified about what
+  Events.where(["id > (?)", initial_id]).all.each { |event|    
+    if((60 - event.time.min) < event.time.min)
+      deviation = 60 - event.time.min
+    else
+      deviation = event.time.min
+    end
+
+    Subscribers.all.each { |subscriber|
+      notify = true
+      if ((subscriber.mindepth.to_f > event.depth.to_f) || (event.depth.to_f > subscriber.maxdepth.to_f))
+        notify = false
+      elsif ((subscriber.minmag.to_f > event.mag.to_f) || (event.mag.to_f > subscriber.maxmag.to_f))
+        notify = false
+      elsif ((subscriber.mindev.to_f > deviation) || (deviation > subscriber.maxdev.to_f))
+        notify = false
+      elsif ((subscriber.source != 'All Sources') && (subscriber.source != event.source))
+        notify = false
+      end
+
+      if notify
+        if (!notifications[subscriber])
+          notifications[subscriber] = Array.new
+        end
+
+        notifications[subscriber] << event
+      end
+    }
+  }
+
+  ses = AWS::SES::Base.new(
+    :access_key_id  => ENV['S3_KEY'],
+    :secret_access_key => ENV['S3_SECRET']
+  )
+
+  notifications.each_key { |subscriber|
+    body = 'We have new events matching your criteria:
+
+'
+
+    notifications[subscriber].each { |event|
+      body += '    Time: ' + event.time.to_s + '
+'
+      body += '    Magnitude: ' + event.mag.to_s + '
+'
+      body += '    Depth: ' + event.depth.to_s + ' km
+'
+      body += '    Latitude/Longitude: ' + event.latitude.to_s + '/' + event.longitude.to_s + '
+'
+      body += '    Source: ' + event.source + '
+'
+      body += '    Link: http://sleuthingfromtheinternet.com/event/' + event.id.to_s + '
+
+'
+    }
+
+    if subscriber.digest
+      body += 'NOTE: We recognize you requested to receive digest emails, but digest functionality is currently not working.  We will work to fix this as soon as possible and apologize for any inconvenience this causes you.
+
+'
+    end
+
+    body += 'You can change your match criteria by going to http://sleuthingfromtheinternet.com again, and going through the same process you did to sign up.  Note that if you are receiving a lot of events from us, restricting the match criteria can be helpful.
+
+'
+
+    body += 'In the event you no longer wish to receive communications from us, you can unsubscribe here: http://sleuthingfromtheinternet.com/unsubscribe/' + subscriber.email + '
+
+'
+
+    ses.send_email(
+      :to => subscriber.email, 
+      :from => 'Sleuthing From the Internet <do-not-reply@sleuthingfromtheinternet.com>', 
+      :subject => 'New Events from Sleuthing From the Internet',
+      :body => body
+    )
+  }
+end
 
 # Time should be a Time utc object
 def AddEvent(time, latitude, longitude, depth, mag, url, source)

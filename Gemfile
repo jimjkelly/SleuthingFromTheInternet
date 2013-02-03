@@ -6,6 +6,7 @@ gem 'thin'
 gem "sinatra-activerecord"
 gem "activerecord"
 gem "nokogiri"
+gem "aws-ses"
 
 group :production do
         gem 'activerecord-postgresql-adapter'

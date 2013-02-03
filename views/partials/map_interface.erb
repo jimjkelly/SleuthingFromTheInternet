@@ -679,7 +679,7 @@ function refreshSubscription() {
     $('#maxMagSubscribe').html($('#maxMagLabel').html())
     $('#minDevSubscribe').html($('#minDevLabel').html())
     $('#maxDevSubscribe').html($('#maxDevLabel').html())
-    $('#sourceSubscribe').html($.inArray($('#sourceLabel').html(), sources))
+    $('#sourceSubscribe').html($('#sourceLabel').html())
 }
 
 //code that adds a marker to Google Maps
@@ -796,9 +796,9 @@ function subscribe() {
         "&maxmag=" + $('#maxMagSubscribe').text() +
         "&mindev=" + $('#minDevSubscribe').text() +
         "&maxdev=" + $('#maxDevSubscribe').text() +
-        "&source=" + sources[$('#sourceSubscribe').text()] +
-        "&digest=" + ($('input[name=digest]')=='true'?'true':'false')
-    
+        "&source=" + $('#sourceSubscribe').text() +
+        "&digest=" + ($('input[name=digest]').is(':checked') ? 'true' : 'false')
+    console.log('digest: ' + $('input[name=digest]').is(':checked'))
     http.open("POST", url, true);
     
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
