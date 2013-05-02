@@ -6,13 +6,12 @@ gem 'thin'
 gem "sinatra-activerecord"
 gem "activerecord"
 gem "activesupport"
-#gem "activerecord", "~> 3.2.13"
-#gem "activesupport", "~> 3.2.13"
 gem "nokogiri"
 gem "aws-ses"
 
 group :production do
         gem 'activerecord-postgresql-adapter'
+	gem 'newrelic_rpm'
 end
 
 group :development do
