@@ -30,6 +30,8 @@ configure :development do
 end
 
 configure :production do
+  require 'newrelic_rpm'
+  
   db = URI.parse(ENV['DATABASE_URL'])
 
   ActiveRecord::Base.establish_connection(
