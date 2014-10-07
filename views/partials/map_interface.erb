@@ -465,13 +465,13 @@ function init() {
 	    sources[0] = "All Sources";
 	    //process it once we have it
 	    $.each(data, function(key, val) {
-	      if(Math.ceil(val.events.mag)>dataMaxMag) dataMaxMag = Math.ceil(val.events.mag)
-	      if(Math.ceil(val.events.depth)>dataMaxDepth) dataMaxDepth = Math.ceil(val.events.depth)
-	      if($.inArray(val.events.source, sources)<0) sources.push(val.events.source)
+	      if(Math.ceil(val.mag)>dataMaxMag) dataMaxMag = Math.ceil(val.mag)
+	      if(Math.ceil(val.depth)>dataMaxDepth) dataMaxDepth = Math.ceil(val.depth)
+	      if($.inArray(val.source, sources)<0) sources.push(val.source)
 	      
 	      // add markers
-	      addMarker(val.events.latitude,val.events.longitude, val.events, markerSize);
-	      markerInfo.push(val.events);
+	      addMarker(val.latitude,val.longitude, val, markerSize);
+	      markerInfo.push(val);
 	      count++;
 	    });
 

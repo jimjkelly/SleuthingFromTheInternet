@@ -45,7 +45,7 @@ end
 
 get '/events.?:format?' do
   if params[:limit]
-    @events = Events.find(:all, :order => "id desc", :limit => params[:limit])
+    @events = Events.order(id: :desc).limit(params[:limit])
   else 
     @events = Events.all
   end

@@ -26,7 +26,7 @@ configure :development do
   enable :logging, :dump_errors
   set :logging, Logger::DEBUG
   set :raise_errors, true
-  set :database, 'sqlite:///db/development.db'
+  set :database, 'sqlite3:db/development.db'
 end
 
 configure :production do
