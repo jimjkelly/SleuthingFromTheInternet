@@ -93,25 +93,18 @@ end
 task :update_isc => :environment do
     print "Updating from the Iranian Seismological Center..."
     STDOUT.flush
+
+    iscEvents = JSON.parse(open("http://irsc.ut.ac.ir/json_currentearthq.php").read)
     
-    iscPage = Nokogiri::HTML(open('http://irsc.ut.ac.ir/currentearthq.php').read) do |config|
-        config.strict.nonet
+    iscEvents['item'].each do |iscEvent|
+      AddEvent(Time.parse(iscEvent['date'] + ' UTC'), 
+               iscEvent['lat'],
+               iscEvent['long'],
+               iscEvent['depth'],
+               iscEvent['mag'],
+               '/newsview.php?&eventid=' + iscEvent['id'] + '&network=earth_ismc__',
+               'irsc.ut.ac.ir')
     end
-      
-    iscPage.xpath('//tr[starts-with(@class, "DataRow")]').each { |row|
-        time = Time.parse(row.children[2].text + ' UTC')
-        latitude = row.children[4].text
-        longitude = row.children[6].text
-        
-        depth = row.children[8].text
-        mag = row.children[10].text
-        url = row.at_xpath('.//td/span[@dir="ltr"]/a')['href']
-        unless url.starts_with?('/')
-            url = '/' + url
-        end
-        
-        AddEvent(time, latitude, longitude, depth, mag, url, 'irsc.ut.ac.ir')
-    }
   
   puts " done."
 end
@@ -166,7 +159,6 @@ task :update_kigam => :environment do
         config.strict.nonet
       end
       kigamEventsData = kigamEventPage.xpath("//td[@bgcolor='#F0F0F0']").children
-      puts 'OMG TIME: ' + kigamEventsData[1].text.strip
       time = Time.parse(kigamEventsData[0].text.strip + ' ' + kigamEventsData[1].text.strip.gsub('\..*', '') + ' UTC')
       latitude = kigamEventsData[2].text.strip
       longitude = kigamEventsData[3].text.strip
