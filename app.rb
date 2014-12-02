@@ -45,11 +45,13 @@ end
 
 get '/events.?:format?' do
   if params[:limit]
-    @events = Events.order(id: :desc).limit(params[:limit])
-  else 
-    @events = Events.all
+    limit = params[:limit]
+  else
+    limit = 100
   end
   
+  @events = Events.order(id: :desc).limit(limit)
+
   if params[:format] and params[:format].downcase == 'json'
     content_type :json
     @events.to_json
