@@ -72,7 +72,7 @@ task :update_usgs => :environment do
   print "Updating from USGS... "
   STDOUT.flush
 
-  usgsEvents = JSON.parse(open("http://earthquake.usgs.gov/earthquakes/feed/geojson/all/hour").read)
+  usgsEvents = JSON.parse(open("http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson").read)
 
   usgsEvents['features'].each do |usgsEvent|
     # Note that we limit our epoch time to 10 characters, for some reason
