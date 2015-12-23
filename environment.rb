@@ -27,6 +27,7 @@ configure :development do
   set :logging, Logger::DEBUG
   set :raise_errors, true
   set :database, 'sqlite3:db/development.db'
+  require 'byebug'
 end
 
 configure :production do

@@ -1,4 +1,4 @@
-ruby '1.9.3'
+ruby '2.2.1'
 source 'http://rubygems.org' 
 gem 'sinatra'
 gem 'rake'
@@ -16,7 +16,7 @@ group :production do
 end
 
 group :development do
-	gem 'debugger'
+	gem "byebug"
 	gem "sqlite3"
         gem "Rack"
 end

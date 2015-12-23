@@ -75,9 +75,7 @@ task :update_usgs => :environment do
   usgsEvents = JSON.parse(open("http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson").read)
 
   usgsEvents['features'].each do |usgsEvent|
-    # Note that we limit our epoch time to 10 characters, for some reason
-    # USGS pads an extra 3 zeros at the end and it messes things up.
-    AddEvent(Time.at(usgsEvent['properties']['time'][0...10].to_i).utc,
+    AddEvent(Time.at(usgsEvent['properties']['time']/1000).utc,
              usgsEvent['geometry']['coordinates'][1],
              usgsEvent['geometry']['coordinates'][0],
              usgsEvent['geometry']['coordinates'][2],
