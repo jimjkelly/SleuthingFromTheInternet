@@ -1,3 +1,4 @@
+require 'digest/md5'
 require 'open-uri'
 require 'nokogiri'
 require 'aws/ses'
@@ -53,7 +54,7 @@ task :update_events => :environment do
       initialIndex = -1
     end
     
-    ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam'].each do |source|
+    ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam', 'update_wdc'].each do |source|
         begin
             Rake::Task[source].invoke
         rescue
@@ -67,6 +68,35 @@ task :update_events => :environment do
 
     puts "Finished."
 end
+
+task :update_wdc => :environment do
+  print 'Updating from WDC... '
+  STDOUT.flush
+
+  wdcPage = Nokogiri::HTML(open('http://www.csndmc.ac.cn/wdc4seis/').read) do |config|
+    config.strict.nonet
+  end
+
+  wdcPage.xpath('//table/tr/td/span/table/tr').each { |row|
+    AddEvent(
+      Time.parse(row.children[1].text + '+0800'),
+      row.children[3].text,
+      row.children[5].text,
+      row.children[7].text,
+      row.children[9].text,
+      '/wdc4seis/#' + Digest::MD5.hexdigest(
+        row.children[1].text +
+        row.children[3].text +
+        row.children[5].text +
+        row.children[7].text +
+        row.children[9].text
+      ),
+      'www.csndmc.ac.cn'
+    )
+  }
+  puts " done."
+end
+
 
 task :update_usgs => :environment do
   print "Updating from USGS... "
@@ -140,7 +170,6 @@ task :update_kigam => :environment do
     config.strict.nonet
   end
 
-  #kigamPage.xpath("//a[starts-with(@href, 'read_ok.php')]").each { |row|
   kigamPage.xpath("//a[starts-with(@href, 'read_ok.php')]").to_a.map { |i| i['href'] }.uniq.each { |url|
     url = '/pds/db/' + url
 
@@ -262,10 +291,17 @@ def AddEvent(time, latitude, longitude, depth, mag, url, source)
     else
         depth = depth.to_s.gsub(/[^0-9.]/, '')
     end
-    
+
+    if latitude.to_s.include? 'S'
+      latitude = "-" + latitude
+    end
     latitude = latitude.to_s.gsub(/[^0-9.\-]/, '')
+
+    if longitude.to_s.include? 'W'
+      longitude = "-" + longitude
+    end
     longitude = longitude.to_s.gsub(/[^0-9.\-]/, '')
-    
+
     unless Events.exists?(:url => url) # URLs should be unique
         Events.create(:mag => mag,
                       :time => time,

@@ -13,7 +13,7 @@
 
 ActiveRecord::Schema.define(version: 20130114212313) do
 
-  create_table "events", force: true do |t|
+  create_table "events", force: :cascade do |t|
     t.string   "mag"
     t.datetime "time"
     t.string   "url"
@@ -24,7 +24,7 @@ ActiveRecord::Schema.define(version: 20130114212313) do
     t.datetime "retrieved"
   end
 
-  create_table "subscribers", force: true do |t|
+  create_table "subscribers", force: :cascade do |t|
     t.string  "email"
     t.string  "maxdepth"
     t.string  "maxmag"
