@@ -58,7 +58,8 @@ task :update_events => :environment do
         begin
             Rake::Task[source].invoke
         rescue
-            $stderr.puts(' Unable to run ' + source + ' due to unknown problem.')
+            puts ""
+            $stderr.puts(' Error: Unable to run ' + source + ' due to unknown problem.')
             p $!
             puts $@
         end
@@ -70,7 +71,7 @@ task :update_events => :environment do
 end
 
 task :update_wdc => :environment do
-  print 'Updating from WDC... '
+  print "Updating from WDC... "
   STDOUT.flush
 
   wdcPage = Nokogiri::HTML(open('http://www.csndmc.ac.cn/wdc4seis/').read) do |config|
@@ -94,7 +95,7 @@ task :update_wdc => :environment do
       'www.csndmc.ac.cn'
     )
   }
-  puts " done."
+  puts "done."
 end
 
 
@@ -115,11 +116,11 @@ task :update_usgs => :environment do
     # Note that we removed the server name there because we take the source and prepend it
     # at display time
   end
-  puts " done."
+  puts "done."
 end
 
 task :update_isc => :environment do
-    print "Updating from the Iranian Seismological Center..."
+    print "Updating from the Iranian Seismological Center... "
     STDOUT.flush
 
     iscEvents = JSON.parse(open("http://irsc.ut.ac.ir/json_currentearthq.php").read)
@@ -134,11 +135,11 @@ task :update_isc => :environment do
                'irsc.ut.ac.ir')
     end
   
-  puts " done."
+  puts "done."
 end
 
 task :update_fnet => :environment do
-    print "Updating from NIED F-net..."
+    print "Updating from NIED F-net... "
     STDOUT.flush
     
     fnetPage = Nokogiri::HTML(open('http://www.fnet.bosai.go.jp/event/joho.php?LANG=en').read) do |config|
@@ -159,11 +160,11 @@ task :update_fnet => :environment do
         AddEvent(time, latitude, longitude, depth, mag, url, 'www.fnet.bosai.go.jp')
     }
     
-    puts " done."
+    puts "done."
 end
 
 task :update_kigam => :environment do
-  print "Updating from KIGAM..."
+  print "Updating from KIGAM... "
   STDOUT.flush
 
   kigamPage = Nokogiri::HTML(open('http://quake.kigam.re.kr/pds/db/list.html').read) do |config|
@@ -195,6 +196,7 @@ task :update_kigam => :environment do
       AddEvent(time, latitude, longitude, depth, magnitude, url, 'quake.kigam.re.kr')
     end
   }
+  puts "done."
 end  
 
 # This will look at every event we find after initial_id, and then look at people's
@@ -302,7 +304,7 @@ def AddEvent(time, latitude, longitude, depth, mag, url, source)
     end
     longitude = longitude.to_s.gsub(/[^0-9.\-]/, '')
 
-    unless Events.exists?(:url => url) # URLs should be unique
+      unless Events.exists?(:url => url) # URLs should be unique
         Events.create(:mag => mag,
                       :time => time,
                       :url => url,
@@ -311,5 +313,9 @@ def AddEvent(time, latitude, longitude, depth, mag, url, source)
                       :depth => depth,
                       :source => source,
                       :retrieved => Time.now.utc)
-    end 
+
+        if time.nil? || latitude.empty? || longitude.empty? || depth.empty? || mag.empty? || url.empty?
+          puts "Error collecting all information for " + source + url
+        end
+    end
 end
