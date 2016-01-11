@@ -128,7 +128,7 @@ task :update_isc => :environment do
       AddEvent(Time.parse(iscEvent['date'] + ' UTC'), 
                iscEvent['lat'],
                iscEvent['long'],
-               iscEvent['depth'],
+               iscEvent['dep'],
                iscEvent['mag'],
                '/newsview.php?&eventid=' + iscEvent['id'] + '&network=earth_ismc__',
                'irsc.ut.ac.ir')
