@@ -54,7 +54,7 @@ task :update_events => :environment do
       initialIndex = -1
     end
     
-    ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam', 'update_wdc'].each do |source|
+    ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam'].each do |source|
         begin
             Rake::Task[source].invoke
         rescue
