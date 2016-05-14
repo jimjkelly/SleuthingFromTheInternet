@@ -10,8 +10,18 @@ Version 0.5 - 8/13/2012
 - Factor checkBounds
 */
 
+var limit = '500';
+if (location.search) {
+    var match = /[?&;](.+?)=([^&;]+)/g.exec(location.search);
+    // Use of this requires that the playlist id be the first
+    // parameter
+    if (match && match[1].toLowerCase() === 'limit') {
+        limit = decodeURIComponent(match[2]);
+    }
+}
+
 /* Things you might want to change */
-var json_src = "<%= url('/events.json?limit=500') %>"; //JSON data source
+var json_src = "<%= url('/events.json?limit=') %>" + limit; //JSON data source
 var defZoomIn = 8; //default "max" zoom-in value
 var markerSize = 1; // set marker size constant
 
