@@ -9,6 +9,7 @@ gem "activerecord"
 gem "activesupport"
 gem "nokogiri"
 gem "aws-ses"
+gem "rest-client"
 
 group :production do
         gem 'activerecord-postgresql-adapter'

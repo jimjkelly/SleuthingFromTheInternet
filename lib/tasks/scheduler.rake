@@ -1,3 +1,4 @@
+require 'rest-client'
 require 'digest/md5'
 require 'open-uri'
 require 'nokogiri'
@@ -169,23 +170,23 @@ end
 task :update_fnet => :environment do
     print "Updating from NIED F-net... "
     STDOUT.flush
-    
-    fnetPage = Nokogiri::HTML(open('http://www.fnet.bosai.go.jp/event/joho.php?LANG=en').read) do |config|
+
+    form_data = {:sy => DateTime.now.year.to_s, :sm => DateTime.now.strftime('%m'), :init => '1', :page => '1', :one_page_view => '50', :time_sort => 'desc'}
+    response = RestClient.post 'http://www.fnet.bosai.go.jp/event/sret.php?LANG=en', form_data
+    fnetPage = Nokogiri::HTML(response.to_str) do |config|
         config.strict.nonet
     end
     
-    fnetPage.xpath('//tr[@class="joho_bg3"]').each { |row|
-        time = Time.parse(row.children[0].text + ' UTC')
-        latitude = row.children[1].text
-        longitude = row.children[2].text
-        depth = row.children[3].text
-        mag = row.children[4].text
-        url = row.at_xpath('.//a')['href']
-        if url.starts_with?('.')
-            url = '/event' + url[1..-1]
-        end
-        
-        AddEvent(time, latitude, longitude, depth, mag, url, 'www.fnet.bosai.go.jp')
+    fnetPage.xpath('//tr[@id]').each { |row|
+      id = row.attributes['id'].value
+      time = Time.parse(row.children[3].text + ' UTC')
+      latitude = row.children[5].text
+      longitude = row.children[7].text
+      depth = row.children[11].text
+      mag = row.children[13].text
+      url = '/event/tdmt.php?LANG=en&_id=' + id
+
+      AddEvent(time, latitude, longitude, depth, mag, url, 'www.fnet.bosai.go.jp')
     }
     
     puts "done."
