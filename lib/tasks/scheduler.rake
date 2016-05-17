@@ -70,6 +70,34 @@ task :update_events => :environment do
     puts "Finished."
 end
 
+task :update_retmc => :environment do
+  print "Updating from RETMC... "
+  STDOUT.flush
+
+  retmcPage = Nokogiri::XML(open('http://www.koeri.boun.edu.tr/sismo/zeqmap/xmle/son24saat.xml').read) do |config|
+    config.strict.nonet
+  end
+
+  retmcPage.xpath('//earhquake').each do |row|
+    AddEvent(
+      Time.parse(row.attributes['name'].value + ' UTC'),
+      row.attributes['lat'].value,
+      row.attributes['lng'].value,
+      row.attributes['Depth'].value,
+      row.attributes['mag'].value,
+      '/sismo/2/latest-earthquakes/list-of-latest-events/#' + Digest::MD5.hexdigest(
+        row.attributes['name'].value +
+        row.attributes['lat'].value +
+        row.attributes['lng'].value +
+        row.attributes['Depth'].value +
+        row.attributes['mag'].value
+      ),
+      'www.koeri.boun.edu.tr'
+    )
+  end
+  puts "done."
+end
+
 task :update_wdc => :environment do
   print "Updating from WDC... "
   STDOUT.flush
