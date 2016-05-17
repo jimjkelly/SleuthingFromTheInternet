@@ -65,6 +65,12 @@ Run the server like so:
 	
 or whatever port you would like.
 
+In order to run the data collection tasks, simply run the following:
+
+	$ bundle exec rake -R lib/tasks update_events
+
+This will collect data from the sources and place it in the database.
+
 License
 =======
 
