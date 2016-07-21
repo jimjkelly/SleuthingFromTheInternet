@@ -152,15 +152,15 @@ task :update_isc => :environment do
     print "Updating from the Iranian Seismological Center... "
     STDOUT.flush
 
-    iscEvents = JSON.parse(open("http://irsc.ut.ac.ir/json_currentearthq.php").read)
-    
-    iscEvents['item'].each do |iscEvent|
-      AddEvent(Time.parse(iscEvent['date'] + ' UTC'), 
-               iscEvent['lat'],
-               iscEvent['long'],
-               iscEvent['dep'],
-               iscEvent['mag'],
-               '/newsview.php?&eventid=' + iscEvent['id'] + '&network=earth_ismc__',
+    iscEvents = Nokogiri::XML(open("http://irsc.ut.ac.ir/events_list.xml").read)
+
+    iscEvents.xpath('//item').each do |iscEvent|
+      AddEvent(Time.parse(iscEvent.xpath('date').text + ' UTC'),
+               iscEvent.xpath('lat').text,
+               iscEvent.xpath('long').text,
+               iscEvent.xpath('dep').text,
+               iscEvent.xpath('mag').text,
+               '/newsview.php?&eventid=' + iscEvent.xpath('id').text + '&network=earth_ismc__',
                'irsc.ut.ac.ir')
     end
   
