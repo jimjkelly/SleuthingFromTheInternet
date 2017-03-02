@@ -132,7 +132,7 @@ task :update_usgs => :environment do
   print "Updating from USGS... "
   STDOUT.flush
 
-  usgsEvents = JSON.parse(open("http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson").read, :quirks_mode => true)
+  usgsEvents = JSON.parse(open("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson").read, :quirks_mode => true)
 
   usgsEvents['features'].each do |usgsEvent|
     AddEvent(Time.at(usgsEvent['properties']['time']/1000).utc,
