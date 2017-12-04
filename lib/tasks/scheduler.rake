@@ -5,7 +5,7 @@ require 'nokogiri'
 require 'aws/ses'
 require 'json'
 
-# Set a placeholder RACK_ENV for when this is run outside the scope of rack 
+# Set a placeholder RACK_ENV for when this is run outside the scope of rack
 ENV['RACK_ENV'] = 'PLACEHOLDER' if not ENV.key?('RACK_ENV')
 
 task :environment do
@@ -54,7 +54,7 @@ task :update_events => :environment do
     else
       initialIndex = -1
     end
-    
+
     ['update_usgs', 'update_isc', 'update_fnet', 'update_kigam', 'update_wdc', 'update_retmc'].each do |source|
         begin
             Rake::Task[source].invoke
@@ -103,23 +103,27 @@ task :update_wdc => :environment do
   print "Updating from WDC... "
   STDOUT.flush
 
-  wdcPage = Nokogiri::HTML(open('http://www.csndmc.ac.cn/wdc4seis/').read) do |config|
+  wdcPage = Nokogiri::HTML(open('http://www.csndmc.ac.cn/index/main').read) do |config|
     config.strict.nonet
   end
 
-  wdcPage.xpath('//table/tr/td/span/table/tr').each { |row|
+  wdcPage.xpath('//table/tbody/tr[@class="eqdata"]/td/a').each { |row|
+    hitPage = Nokogiri::HTML(open('http://www.csndmc.ac.cn' + row.attributes['href']).read) do |config|
+      config.strict.nonet
+    end
+    # AddEvent(time, latitude, longitude, depth, mag, url, source)
     AddEvent(
-      Time.parse(row.children[1].text + '+0800'),
-      row.children[3].text,
-      row.children[5].text,
-      row.children[7].text,
-      row.children[9].text,
-      '/wdc4seis/#' + Digest::MD5.hexdigest(
-        row.children[1].text +
-        row.children[3].text +
-        row.children[5].text +
-        row.children[7].text +
-        row.children[9].text
+      Time.parse(hitPage.xpath('//table[2]/tr/td').children[2].text + '+0800'),
+      hitPage.xpath('//table[2]/tr/td').children[5].text,
+      hitPage.xpath('//table[2]/tr/td').children[8].text,
+      hitPage.xpath('//table[2]/tr/td').children[11].text,
+      hitPage.xpath('//table[2]/tr/td').children[14].text,
+      '#' + Digest::MD5.hexdigest(
+        hitPage.xpath('//table[2]/tr/td').children[2].text +
+        hitPage.xpath('//table[2]/tr/td').children[5].text +
+        hitPage.xpath('//table[2]/tr/td').children[8].text +
+        hitPage.xpath('//table[2]/tr/td').children[11].text +
+        hitPage.xpath('//table[2]/tr/td').children[14].text
       ),
       'www.csndmc.ac.cn'
     )
@@ -163,7 +167,7 @@ task :update_isc => :environment do
                '/newsview.php?&eventid=' + iscEvent.xpath('id').text + '&network=earth_ismc__',
                'irsc.ut.ac.ir')
     end
-  
+
   puts "done."
 end
 
@@ -176,7 +180,7 @@ task :update_fnet => :environment do
     fnetPage = Nokogiri::HTML(response.to_str) do |config|
         config.strict.nonet
     end
-    
+
     fnetPage.xpath('//tr[@id]').each { |row|
       id = row.attributes['id'].value
       time = Time.parse(row.children[3].text + ' UTC')
@@ -188,7 +192,7 @@ task :update_fnet => :environment do
 
       AddEvent(time, latitude, longitude, depth, mag, url, 'www.fnet.bosai.go.jp')
     }
-    
+
     puts "done."
 end
 
@@ -211,7 +215,7 @@ task :update_kigam => :environment do
     AddEvent(time, latitude, longitude, depth, magnitude, url, 'quake.kigam.re.kr')
   }
   puts "done."
-end  
+end
 
 # This will look at every event we find after initial_id, and then look at people's
 # subscription settings, and email them information about new events.
@@ -219,7 +223,7 @@ def update_subscribers(initial_id)
   notifications = Hash.new
 
   # Check our new events to see who should be notified about what
-  Events.where(["id > (?)", initial_id]).all.each { |event|    
+  Events.where(["id > (?)", initial_id]).all.each { |event|
     if((60 - event.time.min) < event.time.min)
       deviation = 60 - event.time.min
     else
@@ -289,8 +293,8 @@ def update_subscribers(initial_id)
 '
 
     ses.send_email(
-      :to => subscriber.email, 
-      :from => 'Sleuthing From the Internet <do-not-reply@sleuthingfromtheinternet.com>', 
+      :to => subscriber.email,
+      :from => 'Sleuthing From the Internet <do-not-reply@sleuthingfromtheinternet.com>',
       :subject => 'New Events from Sleuthing From the Internet',
       :body => body
     )
@@ -301,7 +305,7 @@ end
 def AddEvent(time, latitude, longitude, depth, mag, url, source)
     # First do some normalization:
     mag = mag.to_s.gsub(/[^0-9.]/, '')
-    
+
     if depth.to_s.include? "shallow"
         depth = "0"
     else
