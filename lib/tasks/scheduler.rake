@@ -200,7 +200,7 @@ task :update_kigam => :environment do
   print "Updating from KIGAM... "
   STDOUT.flush
 
-  kigamPage = Nokogiri::HTML(open('http://quake.kigam.re.kr/earthquake/eqListUser.do?eq_gb=CDIDX00003&menu_nix=3Wlr1F77').read) do |config|
+  kigamPage = Nokogiri::HTML(open('https://quake.kigam.re.kr/earthquake/eqListUser.do?eq_gb=CDIDX00003&menu_nix=3Wlr1F77').read) do |config|
     config.strict.nonet
   end
 
