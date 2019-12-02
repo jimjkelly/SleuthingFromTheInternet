@@ -1,4 +1,4 @@
-ruby '2.2.1'
+ruby '2.6.5'
 source 'http://rubygems.org' 
 gem 'sinatra'
 gem 'rake'
