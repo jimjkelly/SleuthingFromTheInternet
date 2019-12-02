@@ -155,17 +155,20 @@ end
 task :update_isc => :environment do
     print "Updating from the Iranian Seismological Center... "
     STDOUT.flush
-
     iscEvents = Nokogiri::XML(open("http://irsc.ut.ac.ir/events_list.xml").read)
 
     iscEvents.xpath('//item').each do |iscEvent|
-      AddEvent(Time.parse(iscEvent.xpath('date').text + ' UTC'),
-               iscEvent.xpath('lat').text,
-               iscEvent.xpath('long').text,
-               iscEvent.xpath('dep').text,
-               iscEvent.xpath('mag').text,
-               '/newsview.php?&eventid=' + iscEvent.xpath('id').text + '&network=earth_ismc__',
-               'irsc.ut.ac.ir')
+      if iscEvent.at('id')
+        AddEvent(Time.parse(iscEvent.xpath('date').text + ' UTC'),
+                iscEvent.xpath('lat').text,
+                iscEvent.xpath('long').text,
+                iscEvent.xpath('dep').text,
+                iscEvent.xpath('mag').text,
+                '/newsview.php?&eventid=' + iscEvent.xpath('id').text + '&network=earth_ismc__',
+                'irsc.ut.ac.ir')
+      else
+        puts "id field not found, skipping item"
+      end
     end
 
   puts "done."
