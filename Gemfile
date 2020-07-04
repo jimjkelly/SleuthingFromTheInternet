@@ -19,5 +19,5 @@ end
 group :development do
 	gem "byebug"
 	gem "sqlite3"
-        gem "Rack"
+    gem "rack"
 end

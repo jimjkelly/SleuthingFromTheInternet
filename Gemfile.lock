@@ -1,7 +1,6 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    Rack (2.0.0)
     activemodel (6.0.3.2)
       activesupport (= 6.0.3.2)
     activerecord (6.0.3.2)
@@ -85,7 +84,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  Rack
   activerecord
   activerecord-postgresql-adapter
   activesupport
@@ -94,6 +92,7 @@ DEPENDENCIES
   json
   newrelic_rpm
   nokogiri
+  rack
   rake
   rest-client
   sinatra
